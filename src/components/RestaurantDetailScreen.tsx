@@ -74,13 +74,20 @@ function DealCard({ deal, onBook }: { deal: DealEntry; onBook: () => void }) {
 }
 
 // ── Deal booking bottom sheet ─────────────────────────────────────────────────
-const MOCK_SLOTS = [
-  { time: "12:00 – 15:00", deals: 5 },
-  { time: "15:00 – 18:00", deals: 3 },
-  { time: "18:00 – 21:00", deals: 2 },
+const TODAY_SLOTS = [
+  { label: "TODAY",    time: "12:00 – 15:00", deals: 5 },
+  { label: "TODAY",    time: "15:00 – 18:00", deals: 3 },
+  { label: "TOMORROW", time: "12:00 – 19:00", deals: 7 },
 ];
 
-function DealBookingSheet({ deal, onClose }: { deal: DealEntry; onClose: () => void }) {
+interface DealBookingSheetProps {
+  deal: DealEntry;
+  restaurantName: string;
+  onClose: () => void;
+  onConfirm: (slot: string) => void;
+}
+
+function DealBookingSheet({ deal, restaurantName, onClose, onConfirm }: DealBookingSheetProps) {
   const [selectedSlot, setSelectedSlot] = useState(0);
 
   return (
@@ -105,12 +112,16 @@ function DealBookingSheet({ deal, onClose }: { deal: DealEntry; onClose: () => v
           <div style={{ width: 44, height: 4, borderRadius: 2, background: "rgba(0,0,0,0.1)" }} />
         </div>
 
+        {/* Restaurant name */}
+        <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373", margin: "0 0 4px" }}>{restaurantName}</p>
+
         {/* Deal title + chips */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
             {deal.isFlash && <span style={{ fontSize: 14, color: "#53F293" }}>⚡</span>}
             <h3 style={{ fontFamily: "var(--font-poppins)", fontSize: 20, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.25 }}>{deal.title}</h3>
           </div>
+          <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, color: "#737373", margin: "0 0 10px", lineHeight: 1.5 }}>{deal.description}</p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {[`🎁 ${deal.avgSpend}`, `🔄 ${deal.validity}`].map(chip => (
               <span key={chip} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 8, background: "rgba(0,0,0,0.05)", fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#525252" }}>{chip}</span>
@@ -121,45 +132,212 @@ function DealBookingSheet({ deal, onClose }: { deal: DealEntry; onClose: () => v
         {/* Divider */}
         <div style={{ height: 1, background: "rgba(0,0,0,0.08)", marginBottom: 20 }} />
 
-        {/* Time slot heading */}
-        <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 700, color: "#0A0A0A", margin: "0 0 12px" }}>Select a time slot</p>
-
-        {/* Time slots */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
-          {MOCK_SLOTS.map((slot, i) => (
-            <button
-              key={i}
-              onClick={() => setSelectedSlot(i)}
-              style={{
-                display: "flex", alignItems: "center", gap: 12, padding: 16,
-                borderRadius: 16, border: `2px solid ${selectedSlot === i ? "#11301D" : "rgba(0,0,0,0.08)"}`,
-                background: selectedSlot === i ? "rgba(17,48,29,0.04)" : "#fff",
-                cursor: "pointer", width: "100%", textAlign: "left",
-              }}
-            >
-              {/* Radio */}
-              <div style={{
-                width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                border: `2px solid ${selectedSlot === i ? "#11301D" : "rgba(0,0,0,0.2)"}`,
-                background: selectedSlot === i ? "#11301D" : "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                {selectedSlot === i && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#fff" }} />}
+        {/* Time slots grouped by day */}
+        {(["TODAY", "TOMORROW"] as const).map(day => {
+          const slots = TODAY_SLOTS.filter(s => s.label === day);
+          return (
+            <div key={day} style={{ marginBottom: 16 }}>
+              <p style={{ fontFamily: "var(--font-poppins)", fontSize: 11, fontWeight: 700, color: "#737373", letterSpacing: "0.06em", margin: "0 0 8px" }}>{day}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {slots.map((slot) => {
+                  const idx = TODAY_SLOTS.indexOf(slot);
+                  const isSelected = selectedSlot === idx;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedSlot(idx)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 12, padding: "14px 16px",
+                        borderRadius: 16, border: `2px solid ${isSelected ? "#11301D" : "rgba(0,0,0,0.08)"}`,
+                        background: isSelected ? "rgba(17,48,29,0.04)" : "#fff",
+                        cursor: "pointer", width: "100%", textAlign: "left",
+                      }}
+                    >
+                      <div style={{
+                        width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                        border: `2px solid ${isSelected ? "#11301D" : "rgba(0,0,0,0.2)"}`,
+                        background: isSelected ? "#11301D" : "#fff",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {isSelected && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#fff" }} />}
+                      </div>
+                      <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 500, color: "#0A0A0A", flex: 1 }}>{slot.time}</span>
+                      <span style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373" }}>{slot.deals} Deals</span>
+                    </button>
+                  );
+                })}
               </div>
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 500, color: "#0A0A0A", flex: 1 }}>{slot.time}</span>
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373" }}>{slot.deals} Deals</span>
-            </button>
-          ))}
-        </div>
+            </div>
+          );
+        })}
 
         {/* Confirm CTA */}
         <button
-          style={{ width: "100%", height: 52, borderRadius: 16, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer" }}
+          onClick={() => onConfirm(`${TODAY_SLOTS[selectedSlot].label} · ${TODAY_SLOTS[selectedSlot].time}`)}
+          style={{ width: "100%", height: 52, borderRadius: 16, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer", marginTop: 4 }}
         >
           Book deal
         </button>
       </div>
     </>
+  );
+}
+
+// ── Booking confirmation screen ───────────────────────────────────────────────
+// Generates a short booking reference, stable for the session
+function makeRef() {
+  return "NT-" + Math.random().toString(36).slice(2, 7).toUpperCase();
+}
+
+interface ConfirmedBooking {
+  deal: DealEntry;
+  slot: string;
+  restaurantName: string;
+  imageSrc: string;
+  ref: string;
+}
+
+function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBooking; onDone: () => void }) {
+  return (
+    <div
+      style={{
+        position: "absolute", inset: 0, background: "#fff", zIndex: 70,
+        display: "flex", flexDirection: "column", overflow: "hidden",
+        animation: "slideInFromBottom 0.35s cubic-bezier(0.32,0.72,0,1) both",
+      }}
+    >
+      {/* Status bar */}
+      <div style={{ height: 44, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px 0" }}>
+        <span style={{ fontSize: 15, fontWeight: 600, fontFamily: "var(--font-poppins)", color: "#0A0A0A", letterSpacing: "-0.5px" }}>9:41</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "#0A0A0A" }}>
+          <span>●●●</span><span style={{ marginLeft: 4 }}>WiFi</span><span style={{ marginLeft: 4 }}>🔋</span>
+        </div>
+      </div>
+
+      {/* Scrollable content */}
+      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "16px 24px 0" }}>
+
+        {/* Illustration */}
+        <div style={{ width: "100%", maxWidth: 306, marginBottom: 8 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/illustration-confirmation.svg"
+            alt="Booking confirmed illustration"
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
+
+        {/* Heading */}
+        <h1 style={{ fontFamily: "var(--font-poppins)", fontSize: 26, fontWeight: 700, color: "#0A0A0A", margin: "0 0 8px", textAlign: "center", lineHeight: 1.25 }}>
+          Booking confirmed! 🎉
+        </h1>
+        <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373", margin: "0 0 28px", textAlign: "center", lineHeight: 1.5 }}>
+          Your deal is locked in. Show the QR code at the venue to redeem it.
+        </p>
+
+        {/* Deal summary card */}
+        <div style={{
+          width: "100%", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 20,
+          overflow: "hidden", marginBottom: 16,
+        }}>
+          {/* Restaurant hero strip */}
+          <div style={{ position: "relative", height: 88 }}>
+            <img src={booking.imageSrc} alt={booking.restaurantName} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 100%)" }} />
+            <p style={{ position: "absolute", bottom: 12, left: 16, fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 700, color: "#fff", margin: 0 }}>
+              {booking.restaurantName}
+            </p>
+          </div>
+
+          {/* Deal info rows */}
+          <div style={{ padding: "16px 16px 0" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, paddingBottom: 14, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+              <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>🎟️</span>
+              <div>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Deal</p>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.3 }}>
+                  {booking.deal.isFlash && <span style={{ color: "#53F293" }}>⚡ </span>}{booking.deal.title}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 0 }}>
+              <div style={{ flex: 1, display: "flex", alignItems: "flex-start", gap: 10, padding: "14px 0", borderRight: "1px solid rgba(0,0,0,0.07)" }}>
+                <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>🕐</span>
+                <div>
+                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Time slot</p>
+                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A", margin: 0, lineHeight: 1.3 }}>
+                    {booking.slot.split(" · ")[0]}
+                  </p>
+                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#525252", margin: 0 }}>
+                    {booking.slot.split(" · ")[1]}
+                  </p>
+                </div>
+              </div>
+              <div style={{ flex: 1, display: "flex", alignItems: "flex-start", gap: 10, padding: "14px 0 14px 16px" }}>
+                <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>💰</span>
+                <div>
+                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Avg. spend</p>
+                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A", margin: 0 }}>{booking.deal.avgSpend}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Ticket tear + QR placeholder */}
+          <div style={{ position: "relative", height: 1, margin: "0 8px" }}>
+            <div style={{ position: "absolute", width: 14, height: 14, borderRadius: "50%", background: "#F5F5F5", border: "1px solid rgba(0,0,0,0.08)", left: -17, top: -7, zIndex: 1 }} />
+            <div style={{ borderTop: "1px dashed rgba(0,0,0,0.1)" }} />
+            <div style={{ position: "absolute", width: 14, height: 14, borderRadius: "50%", background: "#F5F5F5", border: "1px solid rgba(0,0,0,0.08)", right: -17, top: -7, zIndex: 1 }} />
+          </div>
+
+          <div style={{ padding: "20px 16px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+            {/* QR placeholder grid */}
+            <div style={{
+              width: 96, height: 96, borderRadius: 12, background: "#0A0A0A",
+              display: "grid", gridTemplateColumns: "repeat(7,1fr)", gridTemplateRows: "repeat(7,1fr)",
+              gap: 2, padding: 10,
+            }}>
+              {Array.from({ length: 49 }).map((_, i) => {
+                // Simple deterministic QR-ish pattern
+                const col = i % 7, row = Math.floor(i / 7);
+                const corner = (col < 3 && row < 3) || (col > 3 && row < 3) || (col < 3 && row > 3);
+                const filled = corner || Math.abs(Math.sin(i * 7 + booking.ref.charCodeAt(i % booking.ref.length))) > 0.4;
+                return <div key={i} style={{ background: filled ? "#53F293" : "transparent", borderRadius: 1 }} />;
+              })}
+            </div>
+            {/* Booking reference */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, color: "#737373" }}>Booking ref.</span>
+              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 700, color: "#0A0A0A", letterSpacing: "0.08em" }}>{booking.ref}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Validity note */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(83,242,147,0.12)", borderRadius: 12, padding: "10px 14px", marginBottom: 28, width: "100%" }}>
+          <span style={{ fontSize: 16 }}>🔄</span>
+          <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, color: "#11301D", fontWeight: 500, margin: 0, lineHeight: 1.4 }}>
+            Valid {booking.deal.validity}. Present QR code on arrival.
+          </p>
+        </div>
+      </div>
+
+      {/* Bottom CTA bar */}
+      <div style={{ flexShrink: 0, padding: "12px 24px 36px", background: "#fff", borderTop: "1px solid rgba(0,0,0,0.07)" }}>
+        <button
+          onClick={onDone}
+          style={{ width: "100%", height: 52, borderRadius: 16, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer", marginBottom: 10 }}
+        >
+          Done
+        </button>
+        <button
+          style={{ width: "100%", height: 44, borderRadius: 16, background: "transparent", color: "#737373", fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}
+        >
+          View my bookings
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -306,6 +484,7 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
   const [reviewFilter,     setReviewFilter]     = useState<"friends" | "all">("friends");
   const [dealsSectionVisible, setDealsSectionVisible] = useState(true);
   const [selectedDeal,     setSelectedDeal]     = useState<DealEntry | null>(null);
+  const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBooking | null>(null);
 
   const pastHero = scrollY > HERO_SCROLL; // header becomes white + name appears
 
@@ -713,7 +892,29 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
 
       {/* ── DEAL BOOKING BOTTOM SHEET ─────────────────────────────────── */}
       {selectedDeal && (
-        <DealBookingSheet deal={selectedDeal} onClose={() => setSelectedDeal(null)} />
+        <DealBookingSheet
+          deal={selectedDeal}
+          restaurantName={restaurant.name}
+          onClose={() => setSelectedDeal(null)}
+          onConfirm={(slot) => {
+            setConfirmedBooking({
+              deal: selectedDeal,
+              slot,
+              restaurantName: restaurant.name,
+              imageSrc: restaurant.imageSrc,
+              ref: makeRef(),
+            });
+            setSelectedDeal(null);
+          }}
+        />
+      )}
+
+      {/* ── BOOKING CONFIRMATION SCREEN ───────────────────────────────── */}
+      {confirmedBooking && (
+        <BookingConfirmationScreen
+          booking={confirmedBooking}
+          onDone={() => setConfirmedBooking(null)}
+        />
       )}
     </div>
   );
