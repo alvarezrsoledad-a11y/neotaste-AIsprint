@@ -127,23 +127,8 @@ export function DiscoverScreen() {
         />
       </div>
 
-      {/* ── STATUS BAR ────────────────────────────────────────────────── */}
-      <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-between px-4 pt-3 z-40 pointer-events-none">
-        <span
-          className="text-[15px] font-semibold text-black"
-          style={{ letterSpacing: "-0.5px" }}
-        >
-          9:41
-        </span>
-        <div className="flex items-center gap-1 text-[13px] font-medium">
-          <span>●●●</span>
-          <span className="ml-1">WiFi</span>
-          <span className="ml-1">🔋</span>
-        </div>
-      </div>
-
       {/* ── SEARCH BAR + FILTER CHIPS ─────────────────────────────────── */}
-      <div className="absolute top-11 left-4 right-4 z-40 flex flex-col gap-3">
+      <div className="absolute left-4 right-4 z-40 flex flex-col gap-3" style={{ top: "env(safe-area-inset-top, 12px)", paddingTop: 8 }}>
         <div
           className="w-full h-12 bg-white rounded-full flex items-center gap-2 px-4"
           style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)" }}
@@ -329,11 +314,12 @@ export function DiscoverScreen() {
 
       {/* ── TAB BAR ───────────────────────────────────────────────────── */}
       <div
-        className="absolute bottom-0 left-0 right-0 z-40 flex items-start justify-around px-4 pt-3 pb-6"
+        className="absolute bottom-0 left-0 right-0 z-40 flex items-start justify-around px-4 pt-3"
         style={{
           background: "rgba(255,255,255,0.95)",
           backdropFilter: "blur(8px)",
           borderTop: "1px solid rgba(0,0,0,0.08)",
+          paddingBottom: "max(24px, env(safe-area-inset-bottom))",
         }}
       >
         {TABS.map((tab) => (

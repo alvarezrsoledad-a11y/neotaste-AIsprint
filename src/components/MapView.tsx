@@ -111,5 +111,5 @@ export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
     });
   }, [selectedPinId]);
 
-  return <div ref={mapRef} style={{ width: "390px", height: "844px" }} />;
+  return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />;
 }

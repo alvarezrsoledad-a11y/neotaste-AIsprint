@@ -16,6 +16,21 @@ export function MapTooltip({ type, value, avatarSrc, selected = false }: MapTool
   const pillBg = selected ? "#525252" : "#737373";
   const countBadgeBg = selected ? "#53F293" : "#BAFAD4";
 
+  // Plain pin: just a green dot, no pill
+  if (type === "plain") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+        <div style={{
+          width: selected ? 14 : 10, height: selected ? 14 : 10,
+          borderRadius: "50%",
+          background: selected ? "#3EE380" : "#53F293",
+          border: `2px solid ${selected ? "#11301D" : "#3EE380"}`,
+          transition: "all 0.15s ease",
+        }} />
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
       {/* Pill */}

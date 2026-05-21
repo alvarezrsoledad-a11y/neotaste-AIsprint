@@ -1,5 +1,5 @@
 // ── Types ─────────────────────────────────────────────────────────────────────
-export type TooltipType   = "friends" | "redemption" | "rating" | "ranking" | "new" | "community";
+export type TooltipType   = "friends" | "redemption" | "rating" | "ranking" | "new" | "community" | "plain";
 export type TrustTagType  = "friends" | "community" | "redemption";
 
 export interface PinRestaurant {
@@ -580,4 +580,21 @@ export const MAP_PINS: MapPin[] = [
       trustTag:    { type: "community", label: "👥 33 people this week" },
     },
   },
+
+  // ── PLAIN (green dot only — no social cue yet) ────────────────────────────
+  { id: 30, lat: 52.5195, lng: 13.3865, type: "plain", restaurant: { name: "Café Mutti", category: "Café, Brunch", rating: "4.3", reviewCount: "89", distance: "1.8 km", imageSrc: "/images/cafe-image-1.jpg", deals: ["Free coffee with brunch"] } },
+  { id: 31, lat: 52.5260, lng: 13.4210, type: "plain", restaurant: { name: "Silo Coffee", category: "Coffee", rating: "4.5", reviewCount: "212", distance: "2.1 km", imageSrc: "/images/cafe-image-2.jpg", deals: ["2for1 Flat White"] } },
+  { id: 32, lat: 52.5080, lng: 13.3720, type: "plain", restaurant: { name: "Spreegold", category: "Bar, German", rating: "4.2", reviewCount: "143", distance: "2.4 km", imageSrc: "/images/restaurant-image-1.jpg", deals: ["Happy Hour 2for1"] } },
+  { id: 33, lat: 52.5340, lng: 13.3640, type: "plain", restaurant: { name: "La Maison", category: "French", rating: "4.6", reviewCount: "178", distance: "2.9 km", imageSrc: "/images/restaurant-image-2.jpg", deals: ["Lunch Menu €15"] } },
+  { id: 34, lat: 52.4920, lng: 13.4390, type: "plain", restaurant: { name: "Yamazaki", category: "Japanese Bakery", rating: "4.7", reviewCount: "304", distance: "3.2 km", imageSrc: "/images/food-image-1.jpg", deals: ["10% off any pastry"] } },
+  { id: 35, lat: 52.5160, lng: 13.3560, type: "plain", restaurant: { name: "Prater Garten", category: "Beer Garden", rating: "4.4", reviewCount: "521", distance: "1.5 km", imageSrc: "/images/restaurant-image-3.jpg", deals: ["Free pretzel with beer"] } },
+  { id: 36, lat: 52.5395, lng: 13.4470, type: "plain", restaurant: { name: "Annelies", category: "Café, Vegan", rating: "4.5", reviewCount: "167", distance: "3.5 km", imageSrc: "/images/cafe-image-3.jpg", deals: ["Vegan Brunch Deal"] } },
+  { id: 37, lat: 52.4870, lng: 13.3670, type: "plain", restaurant: { name: "Golgatha", category: "Beer Garden", rating: "4.1", reviewCount: "389", distance: "3.8 km", imageSrc: "/images/restaurant-image-4.jpg", deals: ["2for1 draft beer"] } },
+  { id: 38, lat: 52.5230, lng: 13.4680, type: "plain", restaurant: { name: "Knofi", category: "Middle Eastern", rating: "4.6", reviewCount: "256", distance: "2.6 km", imageSrc: "/images/food-image-2.jpg", deals: ["Falafel plate €8"] } },
+  { id: 39, lat: 52.5100, lng: 13.3800, type: "plain", restaurant: { name: "Volt Restaurant", category: "Modern European", rating: "4.8", reviewCount: "198", distance: "2.2 km", imageSrc: "/images/restaurant-image-5.jpg", deals: ["Tasting menu 15% off"] } },
+  { id: 40, lat: 52.5360, lng: 13.3980, type: "plain", restaurant: { name: "Toca Rouge", category: "Bar, Tapas", rating: "4.3", reviewCount: "134", distance: "1.9 km", imageSrc: "/images/cafe-image-4.jpg", deals: ["Tapas 3for2"] } },
+  { id: 41, lat: 52.4960, lng: 13.4510, type: "plain", restaurant: { name: "Hops & Barley", category: "Craft Beer, Pub", rating: "4.5", reviewCount: "287", distance: "2.7 km", imageSrc: "/images/restaurant-image-6.jpg", deals: ["Free tasting flight"] } },
+  { id: 42, lat: 52.5430, lng: 13.3830, type: "plain", restaurant: { name: "Westberlin", category: "Café, Books", rating: "4.4", reviewCount: "203", distance: "3.1 km", imageSrc: "/images/cafe-image-5.jpg", deals: ["Coffee + cake €7"] } },
+  { id: 43, lat: 52.5025, lng: 13.4140, type: "plain", restaurant: { name: "Facil", category: "Fine Dining", rating: "4.9", reviewCount: "312", distance: "1.3 km", imageSrc: "/images/restaurant-image-7.jpg", deals: ["Lunch 25% off"] } },
+  { id: 44, lat: 52.5285, lng: 13.3740, type: "plain", restaurant: { name: "Bar Bobu", category: "Wine Bar", rating: "4.6", reviewCount: "145", distance: "2.0 km", imageSrc: "/images/cafe-image-6.jpg", deals: ["Natural wine 2for1"] } },
 ];

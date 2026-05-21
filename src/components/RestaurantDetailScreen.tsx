@@ -103,7 +103,8 @@ function DealBookingSheet({ deal, restaurantName, onClose, onConfirm }: DealBook
         style={{
           position: "absolute", left: 0, right: 0, bottom: 0,
           background: "#fff", borderRadius: "24px 24px 0 0",
-          zIndex: 61, padding: "12px 16px 36px",
+          zIndex: 61, padding: "12px 16px",
+          paddingBottom: "max(36px, env(safe-area-inset-bottom))",
           animation: "slideInFromBottom 0.3s cubic-bezier(0.32,0.72,0,1) both",
         }}
       >
@@ -389,7 +390,7 @@ function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBook
         </div>
 
         {/* Bottom CTA bar */}
-        <div style={{ flexShrink: 0, padding: "12px 24px 36px", background: "#fff", borderTop: "1px solid rgba(0,0,0,0.07)" }}>
+        <div style={{ flexShrink: 0, padding: "12px 24px", paddingBottom: "max(36px, env(safe-area-inset-bottom))", background: "#fff", borderTop: "1px solid rgba(0,0,0,0.07)" }}>
           <button
             onClick={handleShare}
             style={{ width: "100%", height: 52, borderRadius: 16, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
@@ -641,27 +642,10 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#fff", zIndex: 50 }}>
 
-      {/* ── FIXED OVERLAY: status bar ──────────────────────────────────── */}
-      <div
-        style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: STATUS_H,
-          zIndex: 51, display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "12px 16px 0",
-          background: pastHero ? "white" : "transparent",
-          transition: "background 0.25s ease",
-          pointerEvents: "none",
-        }}
-      >
-        <span style={{ fontSize: 15, fontWeight: 600, fontFamily: "var(--font-poppins)", color: pastHero ? "#0A0A0A" : "white", letterSpacing: "-0.5px", transition: "color 0.25s ease" }}>9:41</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: pastHero ? "#0A0A0A" : "white", transition: "color 0.25s ease" }}>
-          <span>●●●</span><span style={{ marginLeft: 4 }}>WiFi</span><span style={{ marginLeft: 4 }}>🔋</span>
-        </div>
-      </div>
-
       {/* ── FIXED OVERLAY: back button row (+ restaurant name when past hero) ── */}
       <div
         style={{
-          position: "absolute", top: STATUS_H, left: 0, right: 0, height: BTN_ROW_H,
+          position: "absolute", top: "env(safe-area-inset-top, 0px)", left: 0, right: 0, height: BTN_ROW_H,
           zIndex: 51, display: "flex", alignItems: "center", padding: "0 16px",
           background: pastHero ? "white" : "transparent",
           transition: "background 0.25s ease",
@@ -959,7 +943,7 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
 
       {/* ── STICKY BOTTOM CTA — hidden when Deals section is visible ─── */}
       {!dealsSectionVisible && (
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(255,255,255,0.97)", backdropFilter: "blur(8px)", borderTop: "1px solid rgba(0,0,0,0.08)", padding: "12px 16px 28px", zIndex: 40 }}>
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(255,255,255,0.97)", backdropFilter: "blur(8px)", borderTop: "1px solid rgba(0,0,0,0.08)", padding: "12px 16px", paddingBottom: "max(28px, env(safe-area-inset-bottom))", zIndex: 40 }}>
           <button
             onClick={() => scrollTo(overviewRef)}
             style={{ width: "100%", height: 52, borderRadius: 16, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
