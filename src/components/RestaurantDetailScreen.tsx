@@ -39,7 +39,7 @@ function getSimilarRestaurants(current: MapPin, count = 4): MapPin[] {
 }
 
 // ── Deal card (ticket style) ──────────────────────────────────────────────────
-function DealCard({ deal }: { deal: DealEntry }) {
+function DealCard({ deal, onBook }: { deal: DealEntry; onBook: () => void }) {
   return (
     <div style={{ position: "relative", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 16, background: "#fff", overflow: "visible", marginBottom: 12 }}>
       <div style={{ padding: "16px 16px 14px" }}>
@@ -61,12 +61,105 @@ function DealCard({ deal }: { deal: DealEntry }) {
         <div style={{ position: "absolute", width: 10, height: 10, borderRadius: "50%", background: "#fff", border: "1px solid rgba(0,0,0,0.1)", right: -13, top: -5, zIndex: 1 }} />
       </div>
       <div style={{ padding: "14px 16px 16px" }}>
-        <button style={{ width: "100%", height: 44, borderRadius: 12, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 600, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          Redeem Now
+        <button
+          onClick={onBook}
+          style={{ width: "100%", height: 44, borderRadius: 12, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 600, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+        >
+          Book deal
           <span style={{ background: "rgba(255,255,255,0.15)", borderRadius: 6, padding: "1px 7px", fontSize: 11, fontWeight: 600 }}>{deal.available} left</span>
         </button>
       </div>
     </div>
+  );
+}
+
+// ── Deal booking bottom sheet ─────────────────────────────────────────────────
+const MOCK_SLOTS = [
+  { time: "12:00 – 15:00", deals: 5 },
+  { time: "15:00 – 18:00", deals: 3 },
+  { time: "18:00 – 21:00", deals: 2 },
+];
+
+function DealBookingSheet({ deal, onClose }: { deal: DealEntry; onClose: () => void }) {
+  const [selectedSlot, setSelectedSlot] = useState(0);
+
+  return (
+    <>
+      {/* Dim backdrop */}
+      <div
+        onClick={onClose}
+        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 60 }}
+      />
+
+      {/* Sheet */}
+      <div
+        style={{
+          position: "absolute", left: 0, right: 0, bottom: 0,
+          background: "#fff", borderRadius: "24px 24px 0 0",
+          zIndex: 61, padding: "12px 16px 36px",
+          animation: "slideInFromBottom 0.3s cubic-bezier(0.32,0.72,0,1) both",
+        }}
+      >
+        {/* Drag handle */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <div style={{ width: 44, height: 4, borderRadius: 2, background: "rgba(0,0,0,0.1)" }} />
+        </div>
+
+        {/* Deal title + chips */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            {deal.isFlash && <span style={{ fontSize: 14, color: "#53F293" }}>⚡</span>}
+            <h3 style={{ fontFamily: "var(--font-poppins)", fontSize: 20, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.25 }}>{deal.title}</h3>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {[`🎁 ${deal.avgSpend}`, `🔄 ${deal.validity}`].map(chip => (
+              <span key={chip} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 8, background: "rgba(0,0,0,0.05)", fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#525252" }}>{chip}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "rgba(0,0,0,0.08)", marginBottom: 20 }} />
+
+        {/* Time slot heading */}
+        <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 700, color: "#0A0A0A", margin: "0 0 12px" }}>Select a time slot</p>
+
+        {/* Time slots */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
+          {MOCK_SLOTS.map((slot, i) => (
+            <button
+              key={i}
+              onClick={() => setSelectedSlot(i)}
+              style={{
+                display: "flex", alignItems: "center", gap: 12, padding: 16,
+                borderRadius: 16, border: `2px solid ${selectedSlot === i ? "#11301D" : "rgba(0,0,0,0.08)"}`,
+                background: selectedSlot === i ? "rgba(17,48,29,0.04)" : "#fff",
+                cursor: "pointer", width: "100%", textAlign: "left",
+              }}
+            >
+              {/* Radio */}
+              <div style={{
+                width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                border: `2px solid ${selectedSlot === i ? "#11301D" : "rgba(0,0,0,0.2)"}`,
+                background: selectedSlot === i ? "#11301D" : "#fff",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {selectedSlot === i && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#fff" }} />}
+              </div>
+              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 500, color: "#0A0A0A", flex: 1 }}>{slot.time}</span>
+              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373" }}>{slot.deals} Deals</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Confirm CTA */}
+        <button
+          style={{ width: "100%", height: 52, borderRadius: 16, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer" }}
+        >
+          Book deal
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -208,9 +301,11 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
   const aboutRef     = useRef<HTMLDivElement>(null);
   const similarRef   = useRef<HTMLDivElement>(null);
 
-  const [scrollY,       setScrollY]       = useState(0);
-  const [activeTab,     setActiveTab]     = useState<TabKey>("overview");
-  const [reviewFilter,  setReviewFilter]  = useState<"friends" | "all">("friends");
+  const [scrollY,          setScrollY]          = useState(0);
+  const [activeTab,        setActiveTab]        = useState<TabKey>("overview");
+  const [reviewFilter,     setReviewFilter]     = useState<"friends" | "all">("friends");
+  const [dealsSectionVisible, setDealsSectionVisible] = useState(true);
+  const [selectedDeal,     setSelectedDeal]     = useState<DealEntry | null>(null);
 
   const pastHero = scrollY > HERO_SCROLL; // header becomes white + name appears
 
@@ -251,6 +346,13 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
       if (ref.current && ref.current.offsetTop - offset <= st) active = key;
     }
     setActiveTab(active);
+
+    // Deals section visibility: visible when its area overlaps the viewport
+    const dealsTop    = overviewRef.current?.offsetTop ?? 0;
+    const dealsBottom = reviewsRef.current?.offsetTop ?? 999999;
+    const vpTop       = st + FIXED_H;
+    const vpBottom    = st + 844;
+    setDealsSectionVisible(vpTop < dealsBottom && vpBottom > dealsTop);
   }, []);
 
   useEffect(() => {
@@ -448,7 +550,7 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
             <span style={{ fontFamily: "var(--font-poppins)", fontSize: 18, fontWeight: 700, color: "#0A0A0A" }}>Deals</span>
             <button style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 600, color: "#737373", background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 8, padding: "5px 12px", cursor: "pointer" }}>See all →</button>
           </div>
-          {detail.dealEntries.map((deal, i) => <DealCard key={i} deal={deal} />)}
+          {detail.dealEntries.map((deal, i) => <DealCard key={i} deal={deal} onBook={() => setSelectedDeal(deal)} />)}
         </div>
 
         {/* divider */}
@@ -597,12 +699,22 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
         <div style={{ height: 100 }} />
       </div>
 
-      {/* ── STICKY BOTTOM CTA ─────────────────────────────────────────── */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(255,255,255,0.97)", backdropFilter: "blur(8px)", borderTop: "1px solid rgba(0,0,0,0.08)", padding: "12px 16px 28px", zIndex: 40 }}>
-        <button style={{ width: "100%", height: 52, borderRadius: 16, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          ⚡ Book deal
-        </button>
-      </div>
+      {/* ── STICKY BOTTOM CTA — hidden when Deals section is visible ─── */}
+      {!dealsSectionVisible && (
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(255,255,255,0.97)", backdropFilter: "blur(8px)", borderTop: "1px solid rgba(0,0,0,0.08)", padding: "12px 16px 28px", zIndex: 40 }}>
+          <button
+            onClick={() => scrollTo(overviewRef)}
+            style={{ width: "100%", height: 52, borderRadius: 16, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            View deals
+          </button>
+        </div>
+      )}
+
+      {/* ── DEAL BOOKING BOTTOM SHEET ─────────────────────────────────── */}
+      {selectedDeal && (
+        <DealBookingSheet deal={selectedDeal} onClose={() => setSelectedDeal(null)} />
+      )}
     </div>
   );
 }

@@ -41,5 +41,11 @@ body {
   to   { transform: translateX(0); }
 }
 
+/* Deal booking sheet slide-up */
+@keyframes slideInFromBottom {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
 /* Hide scrollbars globally where .no-scrollbar is used */
 .no-scrollbar::-webkit-scrollbar { display: none; }
