@@ -202,7 +202,76 @@ interface ConfirmedBooking {
   lng: number;
 }
 
+// ── iOS-style native share sheet placeholder ─────────────────────────────────
+const IOS_SHARE_APPS = [
+  { icon: "💬", label: "Messages" },
+  { icon: "📧", label: "Mail" },
+  { icon: "🟢", label: "WhatsApp" },
+  { icon: "📷", label: "Instagram" },
+  { icon: "🔵", label: "Telegram" },
+  { icon: "🐦", label: "X" },
+];
+
+function IOSShareSheet({ text, onClose }: { text: string; onClose: () => void }) {
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 80 }}
+      />
+      <div
+        style={{
+          position: "absolute", left: 8, right: 8, bottom: 8,
+          zIndex: 81,
+          animation: "slideInFromBottom 0.28s cubic-bezier(0.32,0.72,0,1) both",
+          display: "flex", flexDirection: "column", gap: 8,
+        }}
+      >
+        {/* Main share card */}
+        <div style={{ background: "rgba(242,242,247,0.97)", backdropFilter: "blur(40px)", borderRadius: 16, overflow: "hidden" }}>
+          {/* Preview text */}
+          <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
+            <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, color: "#3C3C43", margin: 0, textAlign: "center", lineHeight: 1.5 }}>{text}</p>
+          </div>
+
+          {/* App grid */}
+          <div style={{ padding: "16px 8px 8px", display: "flex", justifyContent: "space-around" }}>
+            {IOS_SHARE_APPS.map(app => (
+              <button
+                key={app.label}
+                onClick={onClose}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: "0 4px" }}
+              >
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }}>
+                  {app.icon}
+                </div>
+                <span style={{ fontFamily: "var(--font-poppins)", fontSize: 11, color: "#0A0A0A", fontWeight: 500 }}>{app.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Copy link row */}
+          <div style={{ borderTop: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }}>🔗</div>
+            <span style={{ fontFamily: "var(--font-poppins)", fontSize: 15, color: "#0A0A0A", fontWeight: 500 }}>Copy link</span>
+          </div>
+        </div>
+
+        {/* Cancel button */}
+        <button
+          onClick={onClose}
+          style={{ background: "rgba(242,242,247,0.97)", backdropFilter: "blur(40px)", borderRadius: 16, height: 56, border: "none", cursor: "pointer", fontFamily: "var(--font-poppins)", fontSize: 17, fontWeight: 600, color: "#007AFF" }}
+        >
+          Cancel
+        </button>
+      </div>
+    </>
+  );
+}
+
 function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBooking; onDone: () => void }) {
+  const [showShareSheet, setShowShareSheet] = useState(false);
+
   const slotDay  = booking.slot.split(" · ")[0]; // "TODAY" | "TOMORROW"
   const slotTime = booking.slot.split(" · ")[1]; // "12:00 – 15:00"
 
@@ -210,16 +279,14 @@ function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBook
 
   const directionsUrl = `https://maps.apple.com/?q=${encodeURIComponent(booking.address)}`;
 
-  const handleShare = async () => {
+  const handleShare = () => {
     if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({
-          title: `Deal booked at ${booking.restaurantName}!`,
-          text: `I just booked "${booking.deal.title}" at ${booking.restaurantName}. Join me! 🎉`,
-        });
-      } catch {
-        // user cancelled or share not supported — no-op
-      }
+      navigator.share({
+        title: `Deal booked at ${booking.restaurantName}!`,
+        text: `I just booked "${booking.deal.title}" at ${booking.restaurantName}. Join me! 🎉`,
+      }).catch(() => {});
+    } else {
+      setShowShareSheet(true);
     }
   };
 
@@ -250,7 +317,7 @@ function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBook
         </div>
 
         {/* Scrollable content */}
-        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 24px 0" }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 24px 0" }}>
 
           {/* Illustration */}
           <div style={{ width: "100%", maxWidth: 240, marginBottom: 4 }}>
@@ -317,6 +384,8 @@ function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBook
             </div>
           </div>
 
+          {/* bottom breathing room so last card clears the CTA bar */}
+          <div style={{ height: 16, flexShrink: 0 }} />
         </div>
 
         {/* Bottom CTA bar */}
@@ -334,6 +403,14 @@ function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBook
           </button>
         </div>
       </div>
+
+      {/* iOS share sheet */}
+      {showShareSheet && (
+        <IOSShareSheet
+          text={`I just booked "${booking.deal.title}" at ${booking.restaurantName}. Join me on NeoTaste! 🎉`}
+          onClose={() => setShowShareSheet(false)}
+        />
+      )}
     </>
   );
 }
