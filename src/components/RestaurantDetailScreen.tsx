@@ -305,7 +305,7 @@ function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBook
           background: "#fff", borderRadius: "24px 24px 0 0",
           zIndex: 71, display: "flex", flexDirection: "column", overflow: "hidden",
           animation: "slideInFromBottom 0.35s cubic-bezier(0.32,0.72,0,1) both",
-          maxHeight: "88%",
+          height: "88%",
         }}
       >
         {/* Drag handle */}
@@ -317,10 +317,10 @@ function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBook
         </div>
 
         {/* Scrollable content */}
-        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 24px 0" }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 24px 0" }}>
 
           {/* Illustration */}
-          <div style={{ width: "100%", maxWidth: 240, marginBottom: 4 }}>
+          <div style={{ width: 240, margin: "0 auto 4px" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/illustration-confirmation.svg"
@@ -384,8 +384,8 @@ function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBook
             </div>
           </div>
 
-          {/* bottom breathing room so last card clears the CTA bar */}
-          <div style={{ height: 16, flexShrink: 0 }} />
+          {/* bottom breathing room so last card clears the sticky CTA bar (~160px tall) */}
+          <div style={{ height: 160, flexShrink: 0 }} />
         </div>
 
         {/* Bottom CTA bar */}
