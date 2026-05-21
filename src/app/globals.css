@@ -10,8 +10,11 @@
 }
 
 body {
-  background: #E5E5EA;
+  background: #fff;
+  margin: 0;
+  padding: 0;
   font-family: var(--font-poppins), sans-serif;
+  overflow: hidden; /* prevent body scroll — app handles its own scroll */
 }
 
 /* Leaflet overrides */
