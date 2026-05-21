@@ -327,12 +327,11 @@ function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBook
           >
             <span style={{ fontSize: 18 }}>↑</span> Share with friends
           </button>
-          <a
-            href="/bookings"
-            style={{ width: "100%", height: 44, borderRadius: 16, background: "transparent", color: "#737373", fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}
+          <button
+            style={{ width: "100%", height: 44, borderRadius: 16, background: "transparent", color: "#737373", fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             Go to bookings
-          </a>
+          </button>
         </div>
       </div>
     </>
