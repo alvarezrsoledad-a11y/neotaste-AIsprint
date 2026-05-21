@@ -492,10 +492,15 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
   const nonFriendReviews = detail?.reviews.filter(r => !r.isFriend) ?? [];
   const hasFriendReviews = friendReviews.length > 0;
 
-  // "Friends" tab shows only friend reviews; "All people" shows the non-friend ones
-  const allDisplayedReviews = (reviewFilter === "friends" && hasFriendReviews)
+  // Score by completeness: written text + photo bonus (most trust-building content first)
+  const reviewScore = (r: Review) =>
+    (r.text?.length ?? 0) + (r.photos?.length ?? 0) * 200 + (r.likes ?? 0) * 2;
+
+  // "Your friends" tab shows only friend reviews; "All people" shows the non-friend ones
+  const poolReviews = (reviewFilter === "friends" && hasFriendReviews)
     ? friendReviews
     : nonFriendReviews;
+  const allDisplayedReviews = [...poolReviews].sort((a, b) => reviewScore(b) - reviewScore(a));
   const displayedReviews = allDisplayedReviews.slice(0, 5);
 
   // Total count for the current filter (for the "See all" button)
@@ -765,7 +770,7 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
                   outline: reviewFilter === "friends" ? "none" : "1px solid rgba(0,0,0,0.15)",
                 }}
               >
-                💕 Friends ({friendReviews.length})
+                💕 Your friends ({friendReviews.length})
               </button>
               <button
                 onClick={() => setReviewFilter("all")}
