@@ -195,149 +195,147 @@ interface ConfirmedBooking {
   restaurantName: string;
   imageSrc: string;
   ref: string;
+  address: string;
+  neighborhood: string;
+  distance: string;
+  lat: number;
+  lng: number;
 }
 
 function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBooking; onDone: () => void }) {
+  const slotDay  = booking.slot.split(" · ")[0]; // "TODAY" | "TOMORROW"
+  const slotTime = booking.slot.split(" · ")[1]; // "12:00 – 15:00"
+
+  const slotDateLabel = slotDay === "TODAY" ? "Today" : "Tomorrow";
+
+  const directionsUrl = `https://maps.apple.com/?q=${encodeURIComponent(booking.address)}`;
+
+  const handleShare = async () => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: `Deal booked at ${booking.restaurantName}!`,
+          text: `I just booked "${booking.deal.title}" at ${booking.restaurantName}. Join me! 🎉`,
+        });
+      } catch {
+        // user cancelled or share not supported — no-op
+      }
+    }
+  };
+
   return (
-    <div
-      style={{
-        position: "absolute", inset: 0, background: "#fff", zIndex: 70,
-        display: "flex", flexDirection: "column", overflow: "hidden",
-        animation: "slideInFromBottom 0.35s cubic-bezier(0.32,0.72,0,1) both",
-      }}
-    >
-      {/* Status bar */}
-      <div style={{ height: 44, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px 0" }}>
-        <span style={{ fontSize: 15, fontWeight: 600, fontFamily: "var(--font-poppins)", color: "#0A0A0A", letterSpacing: "-0.5px" }}>9:41</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "#0A0A0A" }}>
-          <span>●●●</span><span style={{ marginLeft: 4 }}>WiFi</span><span style={{ marginLeft: 4 }}>🔋</span>
-        </div>
-      </div>
+    <>
+      {/* Dim backdrop */}
+      <div
+        onClick={onDone}
+        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 70 }}
+      />
 
-      {/* Scrollable content */}
-      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "16px 24px 0" }}>
-
-        {/* Illustration */}
-        <div style={{ width: "100%", maxWidth: 306, marginBottom: 8 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/illustration-confirmation.svg"
-            alt="Booking confirmed illustration"
-            style={{ width: "100%", height: "auto", display: "block" }}
-          />
-        </div>
-
-        {/* Heading */}
-        <h1 style={{ fontFamily: "var(--font-poppins)", fontSize: 26, fontWeight: 700, color: "#0A0A0A", margin: "0 0 8px", textAlign: "center", lineHeight: 1.25 }}>
-          Booking confirmed! 🎉
-        </h1>
-        <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373", margin: "0 0 28px", textAlign: "center", lineHeight: 1.5 }}>
-          Your deal is locked in. Show the QR code at the venue to redeem it.
-        </p>
-
-        {/* Deal summary card */}
-        <div style={{
-          width: "100%", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 20,
-          overflow: "hidden", marginBottom: 16,
-        }}>
-          {/* Restaurant hero strip */}
-          <div style={{ position: "relative", height: 88 }}>
-            <img src={booking.imageSrc} alt={booking.restaurantName} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 100%)" }} />
-            <p style={{ position: "absolute", bottom: 12, left: 16, fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 700, color: "#fff", margin: 0 }}>
-              {booking.restaurantName}
-            </p>
-          </div>
-
-          {/* Deal info rows */}
-          <div style={{ padding: "16px 16px 0" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, paddingBottom: 14, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-              <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>🎟️</span>
-              <div>
-                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Deal</p>
-                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 700, color: "#0A0A0A", margin: 0, lineHeight: 1.3 }}>
-                  {booking.deal.isFlash && <span style={{ color: "#53F293" }}>⚡ </span>}{booking.deal.title}
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 0 }}>
-              <div style={{ flex: 1, display: "flex", alignItems: "flex-start", gap: 10, padding: "14px 0", borderRight: "1px solid rgba(0,0,0,0.07)" }}>
-                <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>🕐</span>
-                <div>
-                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Time slot</p>
-                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A", margin: 0, lineHeight: 1.3 }}>
-                    {booking.slot.split(" · ")[0]}
-                  </p>
-                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#525252", margin: 0 }}>
-                    {booking.slot.split(" · ")[1]}
-                  </p>
-                </div>
-              </div>
-              <div style={{ flex: 1, display: "flex", alignItems: "flex-start", gap: 10, padding: "14px 0 14px 16px" }}>
-                <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>💰</span>
-                <div>
-                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Avg. spend</p>
-                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A", margin: 0 }}>{booking.deal.avgSpend}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Ticket tear + QR placeholder */}
-          <div style={{ position: "relative", height: 1, margin: "0 8px" }}>
-            <div style={{ position: "absolute", width: 14, height: 14, borderRadius: "50%", background: "#F5F5F5", border: "1px solid rgba(0,0,0,0.08)", left: -17, top: -7, zIndex: 1 }} />
-            <div style={{ borderTop: "1px dashed rgba(0,0,0,0.1)" }} />
-            <div style={{ position: "absolute", width: 14, height: 14, borderRadius: "50%", background: "#F5F5F5", border: "1px solid rgba(0,0,0,0.08)", right: -17, top: -7, zIndex: 1 }} />
-          </div>
-
-          <div style={{ padding: "20px 16px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-            {/* QR placeholder grid */}
-            <div style={{
-              width: 96, height: 96, borderRadius: 12, background: "#0A0A0A",
-              display: "grid", gridTemplateColumns: "repeat(7,1fr)", gridTemplateRows: "repeat(7,1fr)",
-              gap: 2, padding: 10,
-            }}>
-              {Array.from({ length: 49 }).map((_, i) => {
-                // Simple deterministic QR-ish pattern
-                const col = i % 7, row = Math.floor(i / 7);
-                const corner = (col < 3 && row < 3) || (col > 3 && row < 3) || (col < 3 && row > 3);
-                const filled = corner || Math.abs(Math.sin(i * 7 + booking.ref.charCodeAt(i % booking.ref.length))) > 0.4;
-                return <div key={i} style={{ background: filled ? "#53F293" : "transparent", borderRadius: 1 }} />;
-              })}
-            </div>
-            {/* Booking reference */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, color: "#737373" }}>Booking ref.</span>
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 700, color: "#0A0A0A", letterSpacing: "0.08em" }}>{booking.ref}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Validity note */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(83,242,147,0.12)", borderRadius: 12, padding: "10px 14px", marginBottom: 28, width: "100%" }}>
-          <span style={{ fontSize: 16 }}>🔄</span>
-          <p style={{ fontFamily: "var(--font-poppins)", fontSize: 13, color: "#11301D", fontWeight: 500, margin: 0, lineHeight: 1.4 }}>
-            Valid {booking.deal.validity}. Present QR code on arrival.
-          </p>
-        </div>
-      </div>
-
-      {/* Bottom CTA bar */}
-      <div style={{ flexShrink: 0, padding: "12px 24px 36px", background: "#fff", borderTop: "1px solid rgba(0,0,0,0.07)" }}>
-        <button
+      {/* Sheet */}
+      <div
+        style={{
+          position: "absolute", left: 0, right: 0, bottom: 0,
+          background: "#fff", borderRadius: "24px 24px 0 0",
+          zIndex: 71, display: "flex", flexDirection: "column", overflow: "hidden",
+          animation: "slideInFromBottom 0.35s cubic-bezier(0.32,0.72,0,1) both",
+          maxHeight: "88%",
+        }}
+      >
+        {/* Drag handle */}
+        <div
           onClick={onDone}
-          style={{ width: "100%", height: 52, borderRadius: 16, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer", marginBottom: 10 }}
+          style={{ flexShrink: 0, display: "flex", justifyContent: "center", padding: "12px 0 4px", cursor: "pointer" }}
         >
-          Done
-        </button>
-        <button
-          style={{ width: "100%", height: 44, borderRadius: 16, background: "transparent", color: "#737373", fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}
-        >
-          View my bookings
-        </button>
+          <div style={{ width: 44, height: 4, borderRadius: 2, background: "rgba(0,0,0,0.1)" }} />
+        </div>
+
+        {/* Scrollable content */}
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 24px 0" }}>
+
+          {/* Illustration */}
+          <div style={{ width: "100%", maxWidth: 240, marginBottom: 4 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/illustration-confirmation.svg"
+              alt="Deal booked illustration"
+              style={{ width: "100%", height: "auto", display: "block" }}
+            />
+          </div>
+
+          {/* Heading */}
+          <h1 style={{ fontFamily: "var(--font-poppins)", fontSize: 24, fontWeight: 700, color: "#0A0A0A", margin: "0 0 8px", textAlign: "center", lineHeight: 1.25 }}>
+            Deal booked!
+          </h1>
+          <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373", margin: "0 0 24px", textAlign: "center", lineHeight: 1.55 }}>
+            Enjoy the deal at {booking.restaurantName}.<br />
+            If you need to reserve a table, please contact the restaurant.
+          </p>
+
+          {/* Detail rows */}
+          <div style={{ width: "100%", border: "1px solid rgba(0,0,0,0.09)", borderRadius: 20, overflow: "hidden", marginBottom: 20 }}>
+
+            {/* Date row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 16px", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F5F5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 17 }}>📅</div>
+              <div>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Date</p>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 600, color: "#0A0A0A", margin: 0 }}>{slotDateLabel}</p>
+              </div>
+            </div>
+
+            {/* Time row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 16px", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F5F5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 17 }}>🕐</div>
+              <div>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Time</p>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 600, color: "#0A0A0A", margin: 0 }}>{slotTime}</p>
+              </div>
+            </div>
+
+            {/* Location row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 16px" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F5F5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 17 }}>📍</div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Location</p>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A", margin: "0 0 1px", lineHeight: 1.4 }}>{booking.address}</p>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 12, color: "#737373", margin: 0 }}>{booking.neighborhood} · {booking.distance} away</p>
+              </div>
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flexShrink: 0, height: 34, borderRadius: 10, padding: "0 12px",
+                  background: "rgba(17,48,29,0.07)", color: "#11301D",
+                  fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 600,
+                  display: "flex", alignItems: "center", gap: 4,
+                  textDecoration: "none",
+                }}
+              >
+                🧭 Directions
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Bottom CTA bar */}
+        <div style={{ flexShrink: 0, padding: "12px 24px 36px", background: "#fff", borderTop: "1px solid rgba(0,0,0,0.07)" }}>
+          <button
+            onClick={handleShare}
+            style={{ width: "100%", height: 52, borderRadius: 16, background: "#11301D", color: "#FEFEFE", fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            <span style={{ fontSize: 18 }}>↑</span> Share with friends
+          </button>
+          <a
+            href="/bookings"
+            style={{ width: "100%", height: 44, borderRadius: 16, background: "transparent", color: "#737373", fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}
+          >
+            Go to bookings
+          </a>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -908,6 +906,11 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
               restaurantName: restaurant.name,
               imageSrc: restaurant.imageSrc,
               ref: makeRef(),
+              address: detail.address,
+              neighborhood: detail.neighborhood,
+              distance: restaurant.distance,
+              lat: pin.lat,
+              lng: pin.lng,
             });
             setSelectedDeal(null);
           }}
