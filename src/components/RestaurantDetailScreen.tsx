@@ -6,11 +6,10 @@ import { type DealEntry, type Review, getRestaurantDetail } from "@/data/restaur
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const HERO_H      = 280;
-const STATUS_H    = 44;
 const BTN_ROW_H   = 52;   // back button row (doubles as name bar when past hero)
 const TABBAR_H    = 44;   // tabs row
-const FIXED_H     = STATUS_H + BTN_ROW_H + TABBAR_H; // 140 px
-const HERO_SCROLL = HERO_H - STATUS_H - BTN_ROW_H; // ≈184 px — when hero scrolls away
+const FIXED_H     = BTN_ROW_H + TABBAR_H; // 96 px (no fake status bar)
+const HERO_SCROLL = HERO_H - BTN_ROW_H;   // ≈228 px — when hero scrolls away
 
 type TabKey = "overview" | "reviews" | "about";
 
@@ -678,7 +677,7 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
       {/* ── FIXED OVERLAY: tabs bar (fades in when past hero) ─────────── */}
       <div
         style={{
-          position: "absolute", top: STATUS_H + BTN_ROW_H, left: 0, right: 0, height: TABBAR_H,
+          position: "absolute", top: `calc(env(safe-area-inset-top, 0px) + ${BTN_ROW_H}px)`, left: 0, right: 0, height: TABBAR_H,
           zIndex: 40, background: "white", borderBottom: "1px solid rgba(0,0,0,0.08)",
           display: "flex",
           opacity: pastHero ? 1 : 0, transition: "opacity 0.25s ease",
