@@ -639,7 +639,7 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
   ];
 
   return (
-    <div style={{ position: "absolute", inset: 0, width: 390, height: 844, overflow: "hidden", background: "#fff", zIndex: 50 }}>
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#fff", zIndex: 50 }}>
 
       {/* ── FIXED OVERLAY: status bar ──────────────────────────────────── */}
       <div
