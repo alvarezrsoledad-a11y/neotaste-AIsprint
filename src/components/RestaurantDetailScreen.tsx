@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { StatusBar } from "./StatusBar";
 import { type MapPin, MAP_PINS } from "@/data/pins";
 import { type DealEntry, type Review, getRestaurantDetail } from "@/data/restaurantDetails";
 
@@ -9,9 +8,8 @@ import { type DealEntry, type Review, getRestaurantDetail } from "@/data/restaur
 const HERO_H      = 280;
 const BTN_ROW_H   = 52;   // back button row (doubles as name bar when past hero)
 const TABBAR_H    = 44;   // tabs row
-const STATUS_H    = 44;   // status bar
-const FIXED_H     = STATUS_H + BTN_ROW_H + TABBAR_H; // 140 px
-const HERO_SCROLL = HERO_H - STATUS_H - BTN_ROW_H;   // 184 px — when hero scrolls away
+const FIXED_H     = BTN_ROW_H + TABBAR_H; // 96 px (no fake status bar)
+const HERO_SCROLL = HERO_H - BTN_ROW_H;   // ≈228 px — when hero scrolls away
 
 type TabKey = "overview" | "reviews" | "about";
 
@@ -643,21 +641,10 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#fff", zIndex: 50 }}>
 
-      {/* ── FIXED OVERLAY: status bar ──────────────────────────────────── */}
-      <StatusBar
-        theme={pastHero ? "dark" : "light"}
-        style={{
-          position: "absolute", top: 0, left: 0, right: 0, zIndex: 51,
-          background: pastHero ? "white" : "transparent",
-          transition: "background 0.25s ease",
-          pointerEvents: "none",
-        }}
-      />
-
       {/* ── FIXED OVERLAY: back button row (+ restaurant name when past hero) ── */}
       <div
         style={{
-          position: "absolute", top: 44, left: 0, right: 0, height: BTN_ROW_H,
+          position: "absolute", top: "env(safe-area-inset-top, 0px)", left: 0, right: 0, height: BTN_ROW_H,
           zIndex: 51, display: "flex", alignItems: "center", padding: "0 16px",
           background: pastHero ? "white" : "transparent",
           transition: "background 0.25s ease",
@@ -690,7 +677,7 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
       {/* ── FIXED OVERLAY: tabs bar (fades in when past hero) ─────────── */}
       <div
         style={{
-          position: "absolute", top: 44 + BTN_ROW_H, left: 0, right: 0, height: TABBAR_H,
+          position: "absolute", top: `calc(env(safe-area-inset-top, 0px) + ${BTN_ROW_H}px)`, left: 0, right: 0, height: TABBAR_H,
           zIndex: 40, background: "white", borderBottom: "1px solid rgba(0,0,0,0.08)",
           display: "flex",
           opacity: pastHero ? 1 : 0, transition: "opacity 0.25s ease",

@@ -5,7 +5,6 @@ import { useState, useRef, useCallback } from "react";
 import { RestaurantListItem } from "./RestaurantListItem";
 import { PinDetailCard } from "./PinDetailCard";
 import { RestaurantDetailScreen } from "./RestaurantDetailScreen";
-import { StatusBar } from "./StatusBar";
 import { MAP_PINS } from "@/data/pins";
 
 // ── Leaflet is client-only ────────────────────────────────────────────────────
@@ -118,7 +117,7 @@ export function DiscoverScreen() {
   return (
     <div
       className="relative bg-white overflow-hidden"
-      style={{ width: 390, height: 844 }}
+      style={{ width: "100vw", height: "100dvh" }}
     >
       {/* ── MAP (full bleed) ──────────────────────────────────────────── */}
       <div className="absolute inset-0 z-0">
@@ -128,11 +127,8 @@ export function DiscoverScreen() {
         />
       </div>
 
-      {/* ── STATUS BAR ────────────────────────────────────────────────── */}
-      <StatusBar theme="dark" style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 41, pointerEvents: "none" }} />
-
       {/* ── SEARCH BAR + FILTER CHIPS ─────────────────────────────────── */}
-      <div className="absolute left-4 right-4 z-40 flex flex-col gap-3" style={{ top: 44, paddingTop: 4 }}>
+      <div className="absolute left-4 right-4 z-40 flex flex-col gap-3" style={{ top: "env(safe-area-inset-top, 12px)", paddingTop: 8 }}>
         <div
           className="w-full h-12 bg-white rounded-full flex items-center gap-2 px-4"
           style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)" }}
