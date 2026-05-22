@@ -117,7 +117,7 @@ export function DiscoverScreen() {
   return (
     <div
       className="relative bg-white overflow-hidden"
-      style={{ width: "100vw", height: "100dvh" }}
+      style={{ width: 390, height: 844 }}
     >
       {/* ── MAP (full bleed) ──────────────────────────────────────────── */}
       <div className="absolute inset-0 z-0">
