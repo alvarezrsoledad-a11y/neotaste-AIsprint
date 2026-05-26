@@ -186,11 +186,11 @@ export function DealBookingSheet({ deal, restaurantName, onClose, onConfirm }: D
 
 // ── Booking confirmation screen ───────────────────────────────────────────────
 // Generates a short booking reference, stable for the session
-function makeRef() {
+export function makeRef() {
   return "NT-" + Math.random().toString(36).slice(2, 7).toUpperCase();
 }
 
-interface ConfirmedBooking {
+export interface ConfirmedBooking {
   deal: DealEntry;
   slot: string;
   restaurantName: string;
@@ -270,7 +270,7 @@ function IOSShareSheet({ text, onClose }: { text: string; onClose: () => void })
   );
 }
 
-function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBooking; onDone: () => void }) {
+export function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBooking; onDone: () => void }) {
   const [showShareSheet, setShowShareSheet] = useState(false);
 
   const slotDay  = booking.slot.split(" · ")[0]; // "TODAY" | "TOMORROW"

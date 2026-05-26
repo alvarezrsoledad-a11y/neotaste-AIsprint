@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useState, useRef, useCallback } from "react";
 import { RestaurantListItem } from "./RestaurantListItem";
 import { RestaurantCard }     from "./RestaurantCard";
-import { RestaurantDetailScreen, DealBookingSheet } from "./RestaurantDetailScreen";
+import { RestaurantDetailScreen, DealBookingSheet, BookingConfirmationScreen, type ConfirmedBooking, makeRef } from "./RestaurantDetailScreen";
 import { MAP_PINS } from "@/data/pins";
 import { type DealEntry, getRestaurantDetail } from "@/data/restaurantDetails";
 
@@ -62,7 +62,8 @@ export function DiscoverScreen() {
   const [cardClosing, setCardClosing]     = useState(false);
   const [sheetMode, setSheetMode]         = useState<"peek" | "expanded">("peek");
   const [detailPinId, setDetailPinId]     = useState<number | null>(null);
-  const [bookingDeal, setBookingDeal]     = useState<{ deal: DealEntry; restaurantName: string } | null>(null);
+  const [bookingDeal, setBookingDeal]         = useState<{ deal: DealEntry; restaurantName: string; imageSrc: string; address: string; neighborhood: string; distance: string; lat: number; lng: number } | null>(null);
+  const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBooking | null>(null);
 
   // ── Swipe gesture on bottom sheet drag handle ─────────────────────────────
   const dragStartY    = useRef<number | null>(null);
@@ -274,7 +275,16 @@ export function DiscoverScreen() {
               const idx    = parseInt(dealId.split("-").pop() ?? "0", 10);
               const detail = getRestaurantDetail(selectedPin.id);
               const deal   = detail?.dealEntries[idx];
-              if (deal) setBookingDeal({ deal, restaurantName: selectedPin.restaurant.name });
+              if (deal && detail) setBookingDeal({
+                deal,
+                restaurantName: selectedPin.restaurant.name,
+                imageSrc:       selectedPin.restaurant.imageSrc,
+                address:        detail.address,
+                neighborhood:   detail.neighborhood,
+                distance:       selectedPin.restaurant.distance,
+                lat:            selectedPin.lat,
+                lng:            selectedPin.lng,
+              });
             }}
           />
         )}
@@ -368,7 +378,30 @@ export function DiscoverScreen() {
             deal={bookingDeal.deal}
             restaurantName={bookingDeal.restaurantName}
             onClose={() => setBookingDeal(null)}
-            onConfirm={() => setBookingDeal(null)}
+            onConfirm={(slot) => {
+              setConfirmedBooking({
+                deal:         bookingDeal.deal,
+                slot,
+                restaurantName: bookingDeal.restaurantName,
+                imageSrc:     bookingDeal.imageSrc,
+                ref:          makeRef(),
+                address:      bookingDeal.address,
+                neighborhood: bookingDeal.neighborhood,
+                distance:     bookingDeal.distance,
+                lat:          bookingDeal.lat,
+                lng:          bookingDeal.lng,
+              });
+              setBookingDeal(null);
+            }}
+          />
+        </div>
+      )}
+
+      {confirmedBooking && (
+        <div className="absolute inset-0 z-50">
+          <BookingConfirmationScreen
+            booking={confirmedBooking}
+            onDone={() => setConfirmedBooking(null)}
           />
         </div>
       )}
