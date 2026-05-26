@@ -240,14 +240,27 @@ export function DiscoverScreen() {
       {selectedPinId === null && (
         <div
           className="absolute left-0 right-0 z-30 bg-white flex flex-col"
-          style={{
-            top:          sheetTop,
-            bottom:       TAB_BAR_H,
-            borderRadius: sheetMode === "expanded" ? "0" : "24px 24px 0 0",
-            boxShadow:    sheetMode === "expanded" ? "none" : "0px -5px 6px rgba(160,160,160,0.25)",
-            transition:   "top 0.32s cubic-bezier(0.32, 0.72, 0, 1), border-radius 0.32s ease, box-shadow 0.32s ease",
-            overflow:     "hidden",
-          }}
+          style={
+            sheetMode === "peek"
+              ? {
+                  // Anchor from bottom so it stays flush with the buttons on any viewport height
+                  bottom:       TAB_BAR_H,
+                  height:       SHEET_PEEK_H,
+                  borderRadius: "24px 24px 0 0",
+                  boxShadow:    "0px -5px 6px rgba(160,160,160,0.25)",
+                  transition:   "height 0.32s cubic-bezier(0.32, 0.72, 0, 1), border-radius 0.32s ease, box-shadow 0.32s ease",
+                  overflow:     "hidden",
+                }
+              : {
+                  // Expanded: fill from below search bar down to tab bar
+                  top:          SHEET_EXPANDED_TOP,
+                  bottom:       TAB_BAR_H,
+                  borderRadius: "0",
+                  boxShadow:    "none",
+                  transition:   "top 0.32s cubic-bezier(0.32, 0.72, 0, 1), border-radius 0.32s ease, box-shadow 0.32s ease",
+                  overflow:     "hidden",
+                }
+          }
         >
           {/* ── Drag handle area (always visible at top of sheet) ──── */}
           <div
