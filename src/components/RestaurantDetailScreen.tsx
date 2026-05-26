@@ -684,11 +684,14 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
   const { restaurant } = pin;
   const detail = getRestaurantDetail(pin.id);
 
-  const scrollRef    = useRef<HTMLDivElement>(null);
-  const overviewRef  = useRef<HTMLDivElement>(null);
-  const reviewsRef   = useRef<HTMLDivElement>(null);
-  const aboutRef     = useRef<HTMLDivElement>(null);
-  const similarRef   = useRef<HTMLDivElement>(null);
+  const scrollRef      = useRef<HTMLDivElement>(null);
+  const overviewRef    = useRef<HTMLDivElement>(null);
+  const reviewsRef     = useRef<HTMLDivElement>(null);
+  const aboutRef       = useRef<HTMLDivElement>(null);
+  const similarRef     = useRef<HTMLDivElement>(null);
+  // Used to measure when title / inline-tabs leave the viewport
+  const titleRef       = useRef<HTMLHeadingElement>(null);
+  const inlineTabsRef  = useRef<HTMLDivElement>(null);
 
   const isHeaderElevated = useScrollElevation(scrollRef);
 
@@ -696,6 +699,10 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
   const [activeTab,           setActiveTab]           = useState<TabKey>("overview");
   const [dealsSectionVisible, setDealsSectionVisible] = useState(true);
   const [pastDeals,           setPastDeals]           = useState(false);
+  // pastTitle  → h1 has scrolled behind the nav bar  → show white nav + restaurant name
+  // pastTabs   → inline tabs have scrolled past      → move tabs into the fixed nav bar
+  const [pastTitle,           setPastTitle]           = useState(false);
+  const [pastTabs,            setPastTabs]            = useState(false);
   const [selectedDeal,        setSelectedDeal]        = useState<DealEntry | null>(null);
   const [confirmedBooking,    setConfirmedBooking]    = useState<ConfirmedBooking | null>(null);
 
@@ -714,7 +721,8 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pastHero = scrollY > HERO_SCROLL;
+  // Legacy alias kept so derived vars below (headerShadow, etc.) still compile
+  const pastHero = pastTabs;
 
   const reviewScore = (r: Review) =>
     (r.text?.length ?? 0) + (r.photos?.length ?? 0) * 200 + (r.likes ?? 0) * 2;
@@ -736,6 +744,7 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
     const st = el.scrollTop;
     setScrollY(st);
 
+    // ── Tab active tracking ────────────────────────────────────────────────
     const offset = FIXED_H + 16;
     const tops = [
       { key: "overview" as TabKey, ref: overviewRef },
@@ -748,12 +757,24 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
     }
     setActiveTab(active);
 
+    // ── Scroll-state thresholds ────────────────────────────────────────────
+    // pastTitle: bottom of h1 has scrolled above the nav bar
+    if (titleRef.current) {
+      const titleBottom = titleRef.current.offsetTop + titleRef.current.offsetHeight;
+      setPastTitle(st + BTN_ROW_H >= titleBottom);
+    }
+    // pastTabs: top of inline tabs has scrolled above the nav bar
+    if (inlineTabsRef.current) {
+      setPastTabs(st + BTN_ROW_H >= inlineTabsRef.current.offsetTop);
+    }
+
+    // ── Deals section visibility (for sticky CTA) ─────────────────────────
     const dealsTop    = overviewRef.current?.offsetTop ?? 0;
     const dealsBottom = reviewsRef.current?.offsetTop ?? 999999;
     const vpTop       = st + FIXED_H;
     const vpBottom    = st + 844;
     setDealsSectionVisible(vpTop < dealsBottom && vpBottom > dealsTop);
-    // Only show sticky CTA after the deals section has fully scrolled past
+    // Sticky CTA appears only after deals section fully scrolled past
     setPastDeals(vpTop >= dealsBottom);
   }, []);
 
@@ -781,75 +802,102 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
     { key: "about",    label: "About",             ref: aboutRef    },
   ];
 
-  // Sticky header shadow: only after the hero has scrolled away AND content is below.
-  const headerShadow = pastHero && isHeaderElevated ? "0 4px 12px rgba(0,0,0,0.08)" : "none";
+  // Shadow only when nav is opaque AND content is elevated below it
+  const headerShadow = pastTitle && isHeaderElevated ? "0 2px 8px rgba(0,0,0,0.08)" : "none";
 
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#fff", zIndex: 50 }}>
 
-      {/* ── FIXED OVERLAY: back button row (+ name when past hero) ─────── */}
+      {/* ── FIXED OVERLAY: nav bar ────────────────────────────────────── */}
+      {/* State 0 → transparent, back pill only                           */}
+      {/* State 1 (pastTitle) → white bg + restaurant name fades in       */}
+      {/* State 2 (pastTabs)  → same + tabs slide in below                */}
       <div
         style={{
-          position: "absolute", top: "env(safe-area-inset-top, 0px)", left: 0, right: 0, height: BTN_ROW_H,
-          zIndex: 51, display: "flex", alignItems: "center", padding: "0 16px",
-          background: pastHero ? "white" : "transparent",
-          transition: "background 0.25s ease, box-shadow 0.2s ease",
-          boxShadow: pastHero ? headerShadow : "none",
+          position:   "absolute",
+          top:        "env(safe-area-inset-top, 0px)",
+          left:       0, right: 0,
+          zIndex:     51,
+          overflow:   "hidden",  // clips tabs sliding up
         }}
       >
-        <button
-          onClick={onClose}
-          aria-label="Back"
+        {/* Nav row */}
+        <div
           style={{
-            width: 40, height: 40, borderRadius: "50%", border: "none", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0,
-            background: pastHero ? "#F5F5F5" : "rgba(255,255,255,0.9)",
-            backdropFilter: pastHero ? "none" : "blur(8px)",
-            transition: "background 0.25s ease",
+            height:     BTN_ROW_H,
+            display:    "flex", alignItems: "center", padding: "0 16px",
+            background: pastTitle ? "rgba(255,255,255,0.97)" : "transparent",
+            backdropFilter: pastTitle ? "blur(12px)" : "none",
+            transition: "background 0.28s ease, box-shadow 0.2s ease",
+            boxShadow:  !pastTabs ? headerShadow : "none",
           }}
         >
-          <Icon name="angle-left" size={24} color="#0A0A0A" />
-        </button>
-        <p
+          <button
+            onClick={onClose}
+            aria-label="Back"
+            style={{
+              width: 40, height: 40, borderRadius: "50%", border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+              background: pastTitle ? "#F5F5F5" : "rgba(255,255,255,0.9)",
+              backdropFilter: pastTitle ? "none" : "blur(8px)",
+              transition: "background 0.28s ease",
+            }}
+          >
+            <Icon name="angle-left" size={24} color="#0A0A0A" />
+          </button>
+          <p
+            style={{
+              fontFamily:  "var(--font-poppins)", fontSize: 15, fontWeight: 700, color: "#0A0A0A",
+              margin:      "0 0 0 12px", flex: 1,
+              overflow:    "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              // Fade + subtle upward slide when title scrolls away
+              opacity:     pastTitle ? 1 : 0,
+              transform:   pastTitle ? "translateY(0)" : "translateY(6px)",
+              transition:  pastTitle
+                ? "opacity 0.28s ease, transform 0.32s cubic-bezier(0.32,0.72,0,1)"
+                : "opacity 0.18s ease, transform 0.2s cubic-bezier(0.32,0,0.67,0)",
+              pointerEvents: "none",
+            }}
+          >
+            {restaurant.name}
+          </p>
+        </div>
+
+        {/* Tabs row — slides down from behind the nav bar when pastTabs */}
+        <div
           style={{
-            fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 700, color: "#0A0A0A",
-            margin: "0 0 0 12px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            opacity: pastHero ? 1 : 0, transition: "opacity 0.25s ease",
-            pointerEvents: "none",
+            height:      TABBAR_H,
+            display:     "flex", alignItems: "center", padding: "0 16px",
+            background:  "rgba(255,255,255,0.97)",
+            backdropFilter: "blur(12px)",
+            borderBottom: "1px solid rgba(0,0,0,0.1)",
+            boxShadow:   pastTabs ? headerShadow : "none",
+            // Slide: starts fully hidden above (negative height), drops to 0
+            transform:   pastTabs ? "translateY(0)" : `translateY(-${TABBAR_H}px)`,
+            transition:  pastTabs
+              ? "transform 0.32s cubic-bezier(0.32,0.72,0,1)"
+              : "transform 0.22s cubic-bezier(0.32,0,0.67,0)",
+            pointerEvents: pastTabs ? "auto" : "none",
           }}
         >
-          {restaurant.name}
-        </p>
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => scrollTo(tab.ref)}
+              style={{
+                flex: 1, padding: "16px", background: "none", border: "none",
+                borderBottom: activeTab === tab.key ? "4px solid #11301D" : "4px solid transparent",
+                fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600,
+                color: activeTab === tab.key ? "#0A0A0A" : "#737373",
+                cursor: "pointer", whiteSpace: "nowrap",
+              }}
+            >{tab.label}</button>
+          ))}
+        </div>
       </div>
 
-      {/* ── FIXED OVERLAY: tabs bar (sticky after hero scrolls away) ─── */}
-      <div
-        style={{
-          position: "absolute", top: `calc(env(safe-area-inset-top, 0px) + ${BTN_ROW_H}px)`, left: 0, right: 0, height: TABBAR_H,
-          zIndex: 40, background: "white", borderBottom: "1px solid rgba(0,0,0,0.1)",
-          display: "flex", alignItems: "center", padding: "0 16px",
-          opacity: pastHero ? 1 : 0, transition: "opacity 0.25s ease",
-          pointerEvents: pastHero ? "auto" : "none",
-          boxShadow: headerShadow,
-        }}
-      >
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => scrollTo(tab.ref)}
-            style={{
-              flex: 1, padding: "16px", background: "none", border: "none",
-              borderBottom: activeTab === tab.key ? "4px solid #11301D" : "4px solid transparent",
-              fontFamily: "var(--font-poppins)", fontSize: 14,
-              fontWeight: 600,
-              color: activeTab === tab.key ? "#0A0A0A" : "#737373",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >{tab.label}</button>
-        ))}
-      </div>
+      {/* Tabs are now inside the nav container above — nothing here */}
 
       {/* ── SCROLL AREA ──────────────────────────────────────────────── */}
       <div
@@ -858,7 +906,7 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
       >
         {/* 2 ── Restaurant header — sits below back button overlay */}
         <div style={{ padding: `${BTN_ROW_H + 12}px 16px 0` }}>
-          <h1 style={{ fontFamily: "var(--font-poppins)", fontSize: 32, fontWeight: 700, color: "#0A0A0A", lineHeight: 1.2, margin: "0 0 8px" }}>{restaurant.name}</h1>
+          <h1 ref={titleRef} style={{ fontFamily: "var(--font-poppins)", fontSize: 32, fontWeight: 700, color: "#0A0A0A", lineHeight: 1.2, margin: "0 0 8px" }}>{restaurant.name}</h1>
 
           {/* Row 1: star + rating + (count) · cuisines · €€€ */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 4 }}>
@@ -948,14 +996,17 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
           </div>
         </div>
 
-        {/* 6 ── Inline tabs (only visible before scrolling past hero) */}
+        {/* 6 ── Inline tabs — visible until they scroll up into the fixed header */}
         <div
+          ref={inlineTabsRef}
           style={{
             display: "flex", alignItems: "center", padding: "0 16px",
             borderBottom: "1px solid rgba(0,0,0,0.1)",
             marginTop: 16,
-            opacity: pastHero ? 0 : 1, transition: "opacity 0.15s ease",
-            pointerEvents: pastHero ? "none" : "auto",
+            // Fade out once tabs have migrated to the fixed nav bar
+            opacity:       pastTabs ? 0 : 1,
+            transition:    "opacity 0.2s ease",
+            pointerEvents: pastTabs ? "none" : "auto",
           }}
         >
           {TABS.map(tab => (
