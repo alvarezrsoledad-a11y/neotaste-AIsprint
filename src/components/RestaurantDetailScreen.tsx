@@ -15,8 +15,9 @@ type TabKey = "overview" | "reviews" | "about";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
-  pin: MapPin;
-  onClose: () => void;
+  pin:             MapPin;
+  onClose:         () => void;
+  initialDealIdx?: number;
 }
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
@@ -543,7 +544,7 @@ function SimilarCard({ pin, onOpen }: { pin: MapPin; onOpen: () => void }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export function RestaurantDetailScreen({ pin, onClose }: Props) {
+export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) {
   const { restaurant } = pin;
   const detail = getRestaurantDetail(pin.id);
 
@@ -559,6 +560,14 @@ export function RestaurantDetailScreen({ pin, onClose }: Props) {
   const [dealsSectionVisible, setDealsSectionVisible] = useState(true);
   const [selectedDeal,     setSelectedDeal]     = useState<DealEntry | null>(null);
   const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBooking | null>(null);
+
+  // Open booking sheet immediately if a deal index was passed in
+  useEffect(() => {
+    if (initialDealIdx !== undefined && detail?.dealEntries[initialDealIdx]) {
+      setSelectedDeal(detail.dealEntries[initialDealIdx]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pastHero = scrollY > HERO_SCROLL; // header becomes white + name appears
 

@@ -57,10 +57,11 @@ const TABS = [
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function DiscoverScreen() {
-  const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
-  const [cardClosing, setCardClosing]     = useState(false);
-  const [sheetMode, setSheetMode]         = useState<"peek" | "expanded">("peek");
-  const [detailPinId, setDetailPinId]     = useState<number | null>(null);
+  const [selectedPinId, setSelectedPinId]   = useState<number | null>(null);
+  const [cardClosing, setCardClosing]       = useState(false);
+  const [sheetMode, setSheetMode]           = useState<"peek" | "expanded">("peek");
+  const [detailPinId, setDetailPinId]       = useState<number | null>(null);
+  const [initialDealIdx, setInitialDealIdx] = useState<number | undefined>(undefined);
 
   // ── Swipe gesture on bottom sheet drag handle ─────────────────────────────
   const dragStartY    = useRef<number | null>(null);
@@ -266,7 +267,13 @@ export function DiscoverScreen() {
             }}
             isExiting={cardClosing}
             onClose={handleCardClose}
-            onBookDeal={(dealId) => console.log("Book deal:", dealId)}
+            onViewDetail={() => { if (selectedPin) setDetailPinId(selectedPin.id); }}
+            onBookDeal={(dealId) => {
+              if (!selectedPin) return;
+              const idx = parseInt(dealId.split("-").pop() ?? "0", 10);
+              setInitialDealIdx(idx);
+              setDetailPinId(selectedPin.id);
+            }}
           />
         )}
       </div>
@@ -346,7 +353,8 @@ export function DiscoverScreen() {
           >
             <RestaurantDetailScreen
               pin={detailPin}
-              onClose={() => setDetailPinId(null)}
+              onClose={() => { setDetailPinId(null); setInitialDealIdx(undefined); }}
+              initialDealIdx={initialDealIdx}
             />
           </div>
         );

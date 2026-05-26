@@ -27,6 +27,7 @@ export interface RestaurantCardProps {
   isExiting:      boolean;
   onClose:        () => void;
   onBookDeal:     (dealId: string) => void;
+  onViewDetail:   () => void;
 }
 
 // Spring cubic-beziers
@@ -56,6 +57,7 @@ export function RestaurantCard({
   isExiting,
   onClose,
   onBookDeal,
+  onViewDetail,
 }: RestaurantCardProps) {
   const isFriends  = socialProof.variant === "friends";
   const snippetBg  = isFriends ? "#FEF2F2" : "#EEFEF4";
@@ -74,6 +76,7 @@ export function RestaurantCard({
       }}
     >
       <div
+        onClick={onViewDetail}
         style={{
           background: "#FEFEFE",
           border:     "1px solid #E5E5E5",
@@ -83,6 +86,7 @@ export function RestaurantCard({
           display:    "flex",
           flexDirection: "column",
           gap:        8,
+          cursor:     "pointer",
         }}
       >
         {/* ── Top row: image + info ───────────────────────────────────────── */}
@@ -139,24 +143,21 @@ export function RestaurantCard({
               {restaurantName}
             </p>
 
-            {/* Rating · distance · cuisines */}
-            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
-              <span style={{ fontSize: 11 }}>⭐</span>
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373" }}>
-                {rating}
-              </span>
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, color: "#737373" }}>
-                ({reviewCount})
-              </span>
-              <span style={{ width: 2, height: 2, borderRadius: "50%", background: "#737373", flexShrink: 0 }} />
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373" }}>
-                {distanceKm} km
-              </span>
-              <span style={{ width: 2, height: 2, borderRadius: "50%", background: "#737373", flexShrink: 0 }} />
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {cuisines.join(", ")}
-              </span>
-            </div>
+            {/* Rating · distance · cuisines — single line, truncate with ellipsis */}
+            <p
+              style={{
+                fontFamily:   "var(--font-poppins)",
+                fontSize:     12,
+                fontWeight:   500,
+                color:        "#737373",
+                margin:       0,
+                whiteSpace:   "nowrap",
+                overflow:     "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              ⭐ {rating} ({reviewCount}) · {distanceKm} km · {cuisines.join(", ")}
+            </p>
 
             {/* Social proof snippet — always rendered */}
             {(() => {
@@ -190,8 +191,14 @@ export function RestaurantCard({
                     {socialProof.quote}
                   </p>
 
-                  {/* Avatars + names */}
+                  {/* Names + avatars — text first, avatars after */}
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    {/* Names text */}
+                    <span style={{ fontFamily: "var(--font-poppins)", fontSize: 10, color: "rgba(0,0,0,0.7)", whiteSpace: "nowrap" }}>
+                      <span style={{ fontWeight: 600 }}>{bold}</span>
+                      {rest}
+                    </span>
+
                     {/* Stacked avatars */}
                     <div style={{ display: "flex", alignItems: "center" }}>
                       {socialProof.avatars.slice(0, 3).map((src, i) => (
@@ -211,12 +218,6 @@ export function RestaurantCard({
                         </div>
                       ))}
                     </div>
-
-                    {/* Names text */}
-                    <span style={{ fontFamily: "var(--font-poppins)", fontSize: 10, color: "rgba(0,0,0,0.7)", whiteSpace: "nowrap" }}>
-                      <span style={{ fontWeight: 600 }}>{bold}</span>
-                      {rest}
-                    </span>
                   </div>
                 </div>
               );
@@ -225,7 +226,7 @@ export function RestaurantCard({
 
           {/* ✕ close button — absolute top-right */}
           <button
-            onClick={onClose}
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
             aria-label="Close"
             style={{
               position:   "absolute",
@@ -259,7 +260,7 @@ export function RestaurantCard({
             return (
               <button
                 key={deal.id}
-                onClick={() => onBookDeal(deal.id)}
+                onClick={(e) => { e.stopPropagation(); onBookDeal(deal.id); }}
                 style={{
                   width:        "100%",
                   height:       36,
