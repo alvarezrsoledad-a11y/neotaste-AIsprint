@@ -811,25 +811,35 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
       {/* ── FIXED OVERLAY: nav bar ────────────────────────────────────── */}
       {/* State 0 → transparent, back pill only                           */}
       {/* State 1 (pastTitle) → white bg + restaurant name fades in       */}
-      {/* State 2 (pastTabs)  → same + tabs slide in below                */}
+      {/* State 2 (pastTabs)  → container height expands to reveal tabs   */}
+      {/*                                                                  */}
+      {/* Height animation is used (not translateY) so the tabs row never */}
+      {/* occupies layout space while hidden — avoids a 50px dead zone    */}
+      {/* blocking scroll content below the nav bar.                      */}
       <div
         style={{
           position:   "absolute",
           top:        "env(safe-area-inset-top, 0px)",
           left:       0, right: 0,
           zIndex:     51,
-          overflow:   "hidden",  // clips tabs sliding up
+          overflow:   "hidden",
+          // Expand from nav-only height to nav+tabs height
+          height:     pastTabs ? BTN_ROW_H + TABBAR_H : BTN_ROW_H,
+          transition: pastTabs
+            ? "height 0.32s cubic-bezier(0.32,0.72,0,1)"
+            : "height 0.22s cubic-bezier(0.32,0,0.67,0)",
         }}
       >
         {/* Nav row */}
         <div
           style={{
-            height:     BTN_ROW_H,
-            display:    "flex", alignItems: "center", padding: "0 16px",
-            background: pastTitle ? "rgba(255,255,255,0.97)" : "transparent",
+            height:         BTN_ROW_H,
+            flexShrink:     0,
+            display:        "flex", alignItems: "center", padding: "0 16px",
+            background:     pastTitle ? "rgba(255,255,255,0.97)" : "transparent",
             backdropFilter: pastTitle ? "blur(12px)" : "none",
-            transition: "background 0.28s ease, box-shadow 0.2s ease",
-            boxShadow:  !pastTabs ? headerShadow : "none",
+            transition:     "background 0.28s ease, box-shadow 0.2s ease",
+            boxShadow:      !pastTabs ? headerShadow : "none",
           }}
         >
           <button
@@ -839,9 +849,9 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
               width: 40, height: 40, borderRadius: "50%", border: "none", cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
-              background: pastTitle ? "#F5F5F5" : "rgba(255,255,255,0.9)",
+              background:     pastTitle ? "#F5F5F5" : "rgba(255,255,255,0.9)",
               backdropFilter: pastTitle ? "none" : "blur(8px)",
-              transition: "background 0.28s ease",
+              transition:     "background 0.28s ease",
             }}
           >
             <Icon name="angle-left" size={24} color="#0A0A0A" />
@@ -851,7 +861,6 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
               fontFamily:  "var(--font-poppins)", fontSize: 15, fontWeight: 700, color: "#0A0A0A",
               margin:      "0 0 0 12px", flex: 1,
               overflow:    "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              // Fade + subtle upward slide when title scrolls away
               opacity:     pastTitle ? 1 : 0,
               transform:   pastTitle ? "translateY(0)" : "translateY(6px)",
               transition:  pastTitle
@@ -864,20 +873,16 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
           </p>
         </div>
 
-        {/* Tabs row — slides down from behind the nav bar when pastTabs */}
+        {/* Tabs row — revealed as the container height expands */}
         <div
           style={{
-            height:      TABBAR_H,
-            display:     "flex", alignItems: "center", padding: "0 16px",
-            background:  "rgba(255,255,255,0.97)",
+            height:       TABBAR_H,
+            flexShrink:   0,
+            display:      "flex", alignItems: "center", padding: "0 16px",
+            background:   "rgba(255,255,255,0.97)",
             backdropFilter: "blur(12px)",
             borderBottom: "1px solid rgba(0,0,0,0.1)",
-            boxShadow:   pastTabs ? headerShadow : "none",
-            // Slide: starts fully hidden above (negative height), drops to 0
-            transform:   pastTabs ? "translateY(0)" : `translateY(-${TABBAR_H}px)`,
-            transition:  pastTabs
-              ? "transform 0.32s cubic-bezier(0.32,0.72,0,1)"
-              : "transform 0.22s cubic-bezier(0.32,0,0.67,0)",
+            boxShadow:    pastTabs ? headerShadow : "none",
             pointerEvents: pastTabs ? "auto" : "none",
           }}
         >
