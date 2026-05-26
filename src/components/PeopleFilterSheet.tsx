@@ -29,16 +29,15 @@ export interface PeopleFilterSheetProps {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const CUISINE_OPTIONS: { icon: string; label: string }[] = [
-  { icon: "🍕", label: "Pizza"      },
-  { icon: "🍔", label: "Burger"     },
-  { icon: "🍣", label: "Sushi"      },
-  { icon: "🔥", label: "BBQ"        },
-  { icon: "🍝", label: "Pasta"      },
-  { icon: "🥗", label: "Bowls"      },
-  { icon: "🥪", label: "Sandwich"   },
-  { icon: "🥂", label: "Drinks"     },
-  { icon: "🍦", label: "Ice Cream"  },
-  { icon: "🧋", label: "Bubble Tea" },
+  { icon: "🍕", label: "Pizza"     },
+  { icon: "🍔", label: "Burger"    },
+  { icon: "🍣", label: "Sushi"     },
+  { icon: "🔥", label: "BBQ"       },
+  { icon: "🍝", label: "Pasta"     },
+  { icon: "🥗", label: "Bowls"     },
+  { icon: "🥪", label: "Sandwich"  },
+  { icon: "🥂", label: "Drinks"    },
+  { icon: "🍦", label: "Ice Cream" },
 ];
 
 const SPRING_ENTER = "cubic-bezier(0.32, 0.72, 0, 1)";
@@ -114,13 +113,17 @@ export function PeopleFilterSheet({
   const segmentTotal = tab === "friends" ? friendCount : neotasterCount;
 
   // Mock filter reduction: each active filter trims results.
+  // Base the count on the active segment total so it visibly responds even when
+  // segmentTotal is small (e.g. 5 friends).
   const activeFilterCount =
     selectedCuisines.length +
     (searchAreaKm !== null ? 1 : 0) +
     (selectedPersonIds.length > 0 ? 1 : 0);
-  const reduction   = Math.max(0.25, 1 - activeFilterCount * 0.15);
-  const rawCount    = Math.round(resultCount * reduction);
+  const reduction    = activeFilterCount === 0 ? 1 : Math.max(0.2, 1 - activeFilterCount * 0.15);
+  const rawCount     = Math.round(segmentTotal * reduction);
   const dynamicCount = Math.max(1, Math.min(rawCount, segmentTotal));
+  // (resultCount kept for future use as the universe of available restaurants)
+  void resultCount;
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
@@ -139,6 +142,8 @@ export function PeopleFilterSheet({
     onClose();
   };
 
+  // Tertiary: clear selections inside the sheet but DO NOT close.
+  // Also clear applied filters on the map so the chip de-activates.
   const handleReset = () => {
     setSelectedCuisines([]);
     setSearchAreaKm(null);
@@ -147,7 +152,6 @@ export function PeopleFilterSheet({
     setSearchName("");
     setTab(userHasFriends ? "friends" : "neotasters");
     onReset();
-    onClose();
   };
 
   // ── Drag-to-dismiss ──────────────────────────────────────────────────────────
@@ -344,10 +348,27 @@ export function PeopleFilterSheet({
             </div>
           </Section>
 
-          {/* ── Fix 5/6 — Friends or NeoTasters subsection ──────────── */}
-          <Section title={tab === "friends" ? "Friends" : "NeoTasters"}>
-            {/* Non-functional dropdown chip */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {/* ── Fix 5/6 — Friends or NeoTasters subsection (inline title+chip) ─ */}
+          <div>
+            <div style={{
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "space-between",
+              gap:            12,
+              marginBottom:   12,
+            }}>
+              {/* H5 title */}
+              <p style={{
+                fontFamily: "var(--font-poppins)",
+                fontSize:   16,
+                fontWeight: 600,
+                lineHeight: "22px",
+                color:      "#0A0A0A",
+                margin:     0,
+              }}>
+                {tab === "friends" ? "Friends" : "NeoTasters"}
+              </p>
+              {/* Non-functional dropdown chip */}
               <FilterChip
                 label="Visited: Last Week"
                 rightIcon="chevron"
@@ -358,7 +379,7 @@ export function PeopleFilterSheet({
 
             {/* NeoTasters: search field */}
             {tab === "neotasters" && (
-              <div style={{ marginTop: 12 }}>
+              <div style={{ marginBottom: 12 }}>
                 <SearchBar
                   value={searchName}
                   onChange={setSearchName}
@@ -368,7 +389,7 @@ export function PeopleFilterSheet({
             )}
 
             {/* People list */}
-            <div style={{ marginTop: 12 }}>
+            <div>
               {filteredPeople.map(person => (
                 <PersonRow
                   key={person.id}
@@ -378,13 +399,13 @@ export function PeopleFilterSheet({
                 />
               ))}
             </div>
-          </Section>
+          </div>
 
           {/* Bottom spacer */}
           <div style={{ height: 32 }} />
         </div>
 
-        {/* ── Fix 9 — Sticky CTAs ───────────────────────────────────────── */}
+        {/* ── Sticky CTAs — stacked, primary on top ──────────────────── */}
         <div style={{
           flexShrink:    0,
           padding:       "12px 16px",
@@ -392,32 +413,13 @@ export function PeopleFilterSheet({
           borderTop:     "1px solid rgba(0,0,0,0.08)",
           background:    "#FEFEFE",
           display:       "flex",
-          flexDirection: "row",
+          flexDirection: "column",
           gap:           8,
-          alignItems:    "stretch",
         }}>
-          <button
-            onClick={handleReset}
-            style={{
-              flex:         "0 0 auto",
-              minWidth:     120,
-              height:       48,
-              borderRadius: 12,
-              border:       "1px solid rgba(0,0,0,0.1)",
-              background:   "#FEFEFE",
-              cursor:       "pointer",
-              fontFamily:   "var(--font-poppins)",
-              fontSize:     14,
-              fontWeight:   600,
-              color:        "#0A0A0A",
-            }}
-          >
-            Reset filters
-          </button>
           <button
             onClick={handleApply}
             style={{
-              flex:         1,
+              width:        "100%",
               height:       48,
               borderRadius: 12,
               border:       "none",
@@ -430,6 +432,23 @@ export function PeopleFilterSheet({
             }}
           >
             Show {dynamicCount.toLocaleString()} results
+          </button>
+          <button
+            onClick={handleReset}
+            style={{
+              width:        "100%",
+              height:       48,
+              borderRadius: 12,
+              border:       "1px solid rgba(0,0,0,0.1)",
+              background:   "#FEFEFE",
+              cursor:       "pointer",
+              fontFamily:   "var(--font-poppins)",
+              fontSize:     14,
+              fontWeight:   600,
+              color:        "#0A0A0A",
+            }}
+          >
+            Reset filters
           </button>
         </div>
       </div>
@@ -457,6 +476,7 @@ export function PeopleFilterSheet({
       }}>
         <Segment
           isActive={tab === "friends"}
+          emoji="💕"
           label="Friends"
           description={formatTotal(friendCount, "friend", "friends")}
           onClick={() => onChange("friends")}
@@ -465,6 +485,7 @@ export function PeopleFilterSheet({
         <div style={{ width: 1, background: "rgba(0,0,0,0.1)", alignSelf: "stretch", marginTop: 4, marginBottom: 4 }} />
         <Segment
           isActive={tab === "neotasters"}
+          emoji="👥"
           label="NeoTasters"
           description={formatTotal(neotasterCount, "NeoTaster", "NeoTasters")}
           onClick={() => onChange("neotasters")}
@@ -477,9 +498,10 @@ export function PeopleFilterSheet({
 // ── Segment ───────────────────────────────────────────────────────────────────
 
 function Segment({
-  isActive, label, description, onClick,
+  isActive, emoji, label, description, onClick,
 }: {
   isActive:    boolean;
+  emoji:       string;
   label:       string;
   description: string;
   onClick:     () => void;
@@ -506,12 +528,16 @@ function Segment({
       }}
     >
       <span style={{
+        display:    "inline-flex",
+        alignItems: "center",
+        gap:        6,
         fontFamily: "var(--font-poppins)",
         fontSize:   14,
         fontWeight: 600,
         color:      "#0A0A0A",
         lineHeight: "20px",
       }}>
+        <span aria-hidden style={{ fontSize: 14, lineHeight: 1 }}>{emoji}</span>
         {label}
       </span>
       <span style={{

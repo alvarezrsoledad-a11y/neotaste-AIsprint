@@ -210,12 +210,16 @@ export function DiscoverScreen() {
   const sheetTop = sheetMode === "expanded" ? SHEET_EXPANDED_TOP : SHEET_PEEK_TOP;
 
   // ── People-filter active state + map filtering (Fix 10) ─────────────────
-  const peopleFilterActive = activeFilters !== null && (
-    activeFilters.cuisines.length > 0 ||
-    activeFilters.searchAreaKm !== null ||
-    activeFilters.selectedPersonIds.length > 0 ||
-    activeFilters.tab !== (FRIENDS.length > 0 ? "friends" : "neotasters")
-  );
+  const peopleFilterActive = activeFilters !== null;
+
+  // Number to show in the People-chip numeric badge: count of filter
+  // categories actually configured (1 for tab + each non-empty section).
+  const peopleFilterBadgeCount = activeFilters === null
+    ? 0
+    : 1 +
+      (activeFilters.cuisines.length > 0 ? 1 : 0) +
+      (activeFilters.searchAreaKm !== null ? 1 : 0) +
+      (activeFilters.selectedPersonIds.length > 0 ? 1 : 0);
 
   const visiblePinIds = useMemo<Set<number> | null>(() => {
     if (activeFilters === null) return null;
@@ -253,6 +257,7 @@ export function DiscoverScreen() {
           selectedPinId={selectedPinId}
           onPinSelect={handlePinSelect}
           visiblePinIds={visiblePinIds}
+          peopleFilterTab={activeFilters?.tab ?? null}
         />
       </div>
 
@@ -281,17 +286,40 @@ export function DiscoverScreen() {
               <button
                 key={chip.label}
                 onClick={isPeople ? () => setPeopleFilterOpen(true) : undefined}
-                className="shrink-0 flex items-center gap-1 bg-white rounded-2xl px-3 py-2"
+                className="shrink-0 flex items-center gap-1 rounded-2xl px-3 py-2"
                 style={{
+                  background: isActive ? "#11301D" : "#FEFEFE",
+                  color:      isActive ? "#FEFEFE" : "#0A0A0A",
                   boxShadow:  "0px 2px 7px rgba(67,67,67,0.25)",
                   fontFamily: "var(--font-poppins)",
-                  border:     isActive ? "2px solid #11301D" : "1px solid transparent",
+                  border:     "1px solid transparent",
                 }}
               >
                 <span className="text-[11px]">{chip.icon}</span>
-                <span className="text-[14px] font-semibold text-[#0A0A0A] whitespace-nowrap">
+                <span className="text-[14px] font-semibold whitespace-nowrap" style={{ color: "inherit" }}>
                   {chip.label}
                 </span>
+                {isActive && peopleFilterBadgeCount > 0 && (
+                  <span
+                    style={{
+                      display:        "inline-flex",
+                      alignItems:     "center",
+                      justifyContent: "center",
+                      minWidth:       18,
+                      height:         18,
+                      padding:        "0 5px",
+                      marginLeft:     2,
+                      borderRadius:   9,
+                      background:     "#53F293",
+                      color:          "#0A0A0A",
+                      fontSize:       11,
+                      fontWeight:     700,
+                      lineHeight:     1,
+                    }}
+                  >
+                    {peopleFilterBadgeCount}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -538,15 +566,38 @@ export function DiscoverScreen() {
                 <button
                   key={chip.label}
                   onClick={isPeople ? () => setPeopleFilterOpen(true) : undefined}
-                  className="shrink-0 flex items-center gap-1 bg-white rounded-2xl px-3 py-2"
+                  className="shrink-0 flex items-center gap-1 rounded-2xl px-3 py-2"
                   style={{
+                    background: isActive ? "#11301D" : "#FEFEFE",
+                    color:      isActive ? "#FEFEFE" : "#0A0A0A",
                     boxShadow:  "0px 2px 7px rgba(67,67,67,0.25)",
                     fontFamily: "var(--font-poppins)",
-                    border:     isActive ? "2px solid #11301D" : "1px solid transparent",
+                    border:     "1px solid transparent",
                   }}
                 >
                   <span className="text-[11px]">{chip.icon}</span>
-                  <span className="text-[14px] font-semibold text-[#0A0A0A] whitespace-nowrap">{chip.label}</span>
+                  <span className="text-[14px] font-semibold whitespace-nowrap" style={{ color: "inherit" }}>{chip.label}</span>
+                  {isActive && peopleFilterBadgeCount > 0 && (
+                    <span
+                      style={{
+                        display:        "inline-flex",
+                        alignItems:     "center",
+                        justifyContent: "center",
+                        minWidth:       18,
+                        height:         18,
+                        padding:        "0 5px",
+                        marginLeft:     2,
+                        borderRadius:   9,
+                        background:     "#53F293",
+                        color:          "#0A0A0A",
+                        fontSize:       11,
+                        fontWeight:     700,
+                        lineHeight:     1,
+                      }}
+                    >
+                      {peopleFilterBadgeCount}
+                    </span>
+                  )}
                 </button>
               );
             })}

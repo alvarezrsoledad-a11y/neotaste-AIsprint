@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MapPin, type MapPinType } from "./MapPin";
 import { MAP_PINS, type MapPin as MapPinData } from "@/data/pins";
@@ -10,6 +10,15 @@ interface MapViewProps {
   onPinSelect:    (id: number | null) => void;
   /** When provided, only pins with these ids are visible & interactive on the map. */
   visiblePinIds?: Set<number> | null;
+  /** When the People filter is applied, forces all pins to render as the given variant. */
+  peopleFilterTab?: "friends" | "neotasters" | null;
+}
+
+// Parse "+N" out of socialProof.names ("Mason and +73 visited" → 73)
+function parseExtraFromNames(names?: string): number | undefined {
+  if (!names) return undefined;
+  const m = names.match(/\+(\d+)/);
+  return m ? parseInt(m[1], 10) : undefined;
 }
 
 // ── Pin-type mapping logic (lives here, not inside MapPin) ────────────────────
@@ -29,11 +38,12 @@ function resolveRank(pin: MapPinData): number | undefined {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export function MapView({ selectedPinId, onPinSelect, visiblePinIds }: MapViewProps) {
+export function MapView({ selectedPinId, onPinSelect, visiblePinIds, peopleFilterTab }: MapViewProps) {
   const mapRef         = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const rootsRef       = useRef<Map<number, Root>>(new Map());
   const markersRef     = useRef<Map<number, import("leaflet").Marker>>(new Map());
+  const [markersReady, setMarkersReady] = useState(false);
 
   // ── Initial map setup (runs once) ─────────────────────────────────────────
   useEffect(() => {
@@ -70,8 +80,6 @@ export function MapView({ selectedPinId, onPinSelect, visiblePinIds }: MapViewPr
       map.on("click", () => onPinSelect(null));
 
       MAP_PINS.forEach((pin) => {
-        const pinType = resolvePinType(pin);
-
         // All pin variants (including tiny) use a 32×32 wrapper.
         // The MapPin component positions tiny-default at (8,21) internally so
         // its geographic tip aligns with the shared anchor point (12,32).
@@ -81,16 +89,19 @@ export function MapView({ selectedPinId, onPinSelect, visiblePinIds }: MapViewPr
           "position:relative;overflow:visible;background:transparent;border:none;width:32px;height:32px;";
 
         const root = createRoot(wrapper);
+        rootsRef.current.set(pin.id, root);
+
+        // Initial paint — the re-render effect will update on selection /
+        // people-filter changes.
         root.render(
           <MapPin
-            type={pinType}
+            type={resolvePinType(pin)}
             state="default"
             rank={resolveRank(pin)}
             extraCount={pin.friendVisits?.[0]?.count}
             avatarUrl={pin.friendVisits?.[0]?.avatarUrl ?? pin.tooltipAvatarSrc}
           />
         );
-        rootsRef.current.set(pin.id, root);
 
         const icon = L.divIcon({
           html:       wrapper,
@@ -113,6 +124,7 @@ export function MapView({ selectedPinId, onPinSelect, visiblePinIds }: MapViewPr
       setTimeout(() => map.invalidateSize(), 300);
 
       mapInstanceRef.current = map;
+      setMarkersReady(true);
     });
 
     return () => {
@@ -123,19 +135,37 @@ export function MapView({ selectedPinId, onPinSelect, visiblePinIds }: MapViewPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Re-render pins + pan map whenever selectedPinId changes ─────────────
+  // ── Re-render pins whenever selection or people-filter tab changes ──────
   useEffect(() => {
     rootsRef.current.forEach((root, id) => {
       const pin = MAP_PINS.find((p) => p.id === id);
       if (!pin) return;
-      const pinType = resolvePinType(pin);
+
+      // When the People filter is applied, force the variant + show avatar
+      // and the additional-users badge (parsed from socialProof.names).
+      let pinType  = resolvePinType(pin);
+      let avatar:    string | undefined = pin.friendVisits?.[0]?.avatarUrl ?? pin.tooltipAvatarSrc;
+      let extra:     number | undefined = pin.friendVisits?.[0]?.count;
+
+      if (peopleFilterTab === "friends") {
+        pinType = "friends";
+        avatar  = pin.friendVisits?.[0]?.avatarUrl
+                  ?? pin.restaurant.socialProof?.avatars?.[0]
+                  ?? pin.tooltipAvatarSrc;
+        extra   = pin.friendVisits?.[0]?.count ?? parseExtraFromNames(pin.restaurant.socialProof?.names);
+      } else if (peopleFilterTab === "neotasters") {
+        pinType = "neotaster";
+        avatar  = pin.restaurant.socialProof?.avatars?.[0] ?? pin.tooltipAvatarSrc;
+        extra   = parseExtraFromNames(pin.restaurant.socialProof?.names);
+      }
+
       root.render(
         <MapPin
           type={pinType}
           state={id === selectedPinId ? "active" : "default"}
           rank={resolveRank(pin)}
-          extraCount={pin.friendVisits?.[0]?.count}
-          avatarUrl={pin.friendVisits?.[0]?.avatarUrl ?? pin.tooltipAvatarSrc}
+          extraCount={extra}
+          avatarUrl={avatar}
         />
       );
     });
@@ -162,7 +192,7 @@ export function MapView({ selectedPinId, onPinSelect, visiblePinIds }: MapViewPr
         }
       }
     }
-  }, [selectedPinId]);
+  }, [selectedPinId, peopleFilterTab, markersReady]);
 
   // ── Toggle marker visibility based on visiblePinIds ─────────────────────
   useEffect(() => {
@@ -175,7 +205,7 @@ export function MapView({ selectedPinId, onPinSelect, visiblePinIds }: MapViewPr
         el.style.transition     = "opacity 0.25s ease";
       }
     });
-  }, [visiblePinIds]);
+  }, [visiblePinIds, markersReady]);
 
   return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />;
 }
