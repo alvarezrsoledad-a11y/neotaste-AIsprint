@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState, useRef, useCallback } from "react";
 import { RestaurantListItem } from "./RestaurantListItem";
 import { RestaurantCard }     from "./RestaurantCard";
+import { RestaurantListCard } from "./RestaurantListCard";
 import { RestaurantDetailScreen, DealBookingSheet, BookingConfirmationScreen, type ConfirmedBooking, makeRef } from "./RestaurantDetailScreen";
 import { MAP_PINS } from "@/data/pins";
 import { type DealEntry, getRestaurantDetail } from "@/data/restaurantDetails";
@@ -61,6 +62,7 @@ export function DiscoverScreen() {
   const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
   const [cardClosing, setCardClosing]     = useState(false);
   const [sheetMode, setSheetMode]         = useState<"peek" | "expanded">("peek");
+  const [listOverlayOpen, setListOverlayOpen] = useState(false);
   const [detailPinId, setDetailPinId]     = useState<number | null>(null);
   const [bookingDeal, setBookingDeal]         = useState<{ deal: DealEntry; restaurantName: string; imageSrc: string; address: string; neighborhood: string; distance: string; lat: number; lng: number } | null>(null);
   const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBooking | null>(null);
@@ -77,7 +79,7 @@ export function DiscoverScreen() {
   const onHandlePointerUp = (e: React.PointerEvent) => {
     if (dragStartY.current === null) return;
     const delta = e.clientY - dragStartY.current;
-    if (delta < -40) setSheetMode("expanded");
+    if (delta < -40) setListOverlayOpen(true); // drag up → open overlay
     if (delta > 40)  setSheetMode("peek");
     dragStartY.current = null;
   };
@@ -107,7 +109,10 @@ export function DiscoverScreen() {
   const handlePinSelect = useCallback((id: number | null) => {
     setCardClosing(false);
     setSelectedPinId(id);
-    if (id !== null) setSheetMode("peek"); // collapse sheet when card opens
+    if (id !== null) {
+      setSheetMode("peek");      // collapse sheet when card opens
+      setListOverlayOpen(false); // close overlay when pin card opens
+    }
   }, []);
 
   // Close card: animate out, then clear selection and restore sheet
@@ -128,8 +133,8 @@ export function DiscoverScreen() {
   // Sheet is "in" when no pin is selected OR we're closing the card (sheet slides back in)
   const sheetIn = selectedPinId === null || cardClosing;
 
-  // Show floating buttons only in default map mode (no pin selected, sheet peeking)
-  const showFloatingButtons = selectedPinId === null && sheetMode === "peek";
+  // Show floating buttons only in default map mode (no pin selected, sheet peeking, overlay closed)
+  const showFloatingButtons = selectedPinId === null && sheetMode === "peek" && !listOverlayOpen;
 
   const sheetTop = sheetMode === "expanded" ? SHEET_EXPANDED_TOP : SHEET_PEEK_TOP;
 
@@ -146,8 +151,8 @@ export function DiscoverScreen() {
         />
       </div>
 
-      {/* ── SEARCH BAR + FILTER CHIPS ─────────────────────────────────── */}
-      <div className="absolute left-4 right-4 z-40 flex flex-col gap-3" style={{ top: "env(safe-area-inset-top, 12px)", paddingTop: 8 }}>
+      {/* ── SEARCH BAR + FILTER CHIPS (hidden when list overlay is open) ── */}
+      {!listOverlayOpen && <div className="absolute left-4 right-4 z-40 flex flex-col gap-3" style={{ top: "env(safe-area-inset-top, 12px)", paddingTop: 8 }}>
         <div
           className="w-full h-12 bg-white rounded-full flex items-center gap-2 px-4"
           style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)" }}
@@ -177,7 +182,7 @@ export function DiscoverScreen() {
             </button>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* ── LOCATION BUTTON (hidden when pin selected or sheet expanded) ── */}
       {showFloatingButtons && (
@@ -200,7 +205,7 @@ export function DiscoverScreen() {
           style={{ bottom: TAB_BAR_H + SHEET_PEEK_H + 16 }}
         >
           <button
-            onClick={() => setSheetMode("expanded")}
+            onClick={() => setListOverlayOpen(true)}
             className="flex items-center gap-2 px-5 py-3 rounded-2xl"
             style={{
               background: "#11301D",
@@ -216,28 +221,6 @@ export function DiscoverScreen() {
         </div>
       )}
 
-      {/* ── MAP BUTTON (visible when sheet is expanded) ───────────────── */}
-      {sheetMode === "expanded" && selectedPinId === null && (
-        <div
-          className="absolute left-1/2 -translate-x-1/2 z-40"
-          style={{ bottom: TAB_BAR_H + 16 }}
-        >
-          <button
-            onClick={() => setSheetMode("peek")}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl"
-            style={{
-              background: "#11301D",
-              color: "#FEFEFE",
-              fontFamily: "var(--font-poppins)",
-              fontSize: 16,
-              fontWeight: 600,
-            }}
-          >
-            <span>🗺️</span>
-            <span>Map</span>
-          </button>
-        </div>
-      )}
 
       {/* ── RESTAURANT CARD (slides up when a pin is selected) ──────────── */}
       <div
@@ -405,6 +388,128 @@ export function DiscoverScreen() {
           />
         </div>
       )}
+
+      {/* ── LIST VIEW OVERLAY ────────────────────────────────────────────
+           Always mounted; slides in/out via CSS transition.
+           z-39: sits above map/sheet/card, below tab bar (z-40).
+      ─────────────────────────────────────────────────────────────── */}
+      <div
+        className="absolute inset-0 bg-white flex flex-col"
+        style={{
+          zIndex:       39,
+          transform:    listOverlayOpen ? "translateY(0)" : "translateY(100%)",
+          transition:   "transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)",
+          pointerEvents: listOverlayOpen ? "auto" : "none",
+          willChange:   "transform",
+        }}
+      >
+        {/* Pinned header: search bar + filter chips */}
+        <div
+          className="flex-none flex flex-col gap-3 px-4"
+          style={{ paddingTop: "max(12px, env(safe-area-inset-top, 12px))", paddingBottom: 8 }}
+        >
+          <div
+            className="w-full h-12 bg-white rounded-full flex items-center gap-2 px-4"
+            style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)" }}
+          >
+            <span className="text-base">🔍</span>
+            <span
+              className="text-base font-medium"
+              style={{ color: "rgba(0,0,0,0.7)", fontFamily: "var(--font-poppins)" }}
+            >
+              Search deals &amp; more
+            </span>
+          </div>
+          <div className="flex items-center gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            {FILTER_CHIPS.map((chip) => (
+              <button
+                key={chip.label}
+                className="shrink-0 flex items-center gap-1 bg-white rounded-2xl px-3 py-2"
+                style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)", fontFamily: "var(--font-poppins)" }}
+              >
+                <span className="text-[11px]">{chip.icon}</span>
+                <span className="text-[14px] font-semibold text-[#0A0A0A] whitespace-nowrap">{chip.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Scrollable restaurant list */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="px-4">
+            {MAP_PINS.map((pin) => (
+              <RestaurantListCard
+                key={pin.id}
+                restaurantName={pin.restaurant.name}
+                rating={parseFloat(pin.restaurant.rating)}
+                reviewCount={parseInt(pin.restaurant.reviewCount.replace(/[^0-9]/g, ""), 10) || 0}
+                distanceKm={parseFloat(pin.restaurant.distance)}
+                cuisines={pin.restaurant.category.split(", ")}
+                imageUrl={pin.restaurant.imageSrc}
+                rank={
+                  pin.type === "ranking" && pin.value
+                    ? (parseInt(pin.value.replace("#", ""), 10) || undefined)
+                    : undefined
+                }
+                deals={[
+                  { id: `${pin.id}-0`, title: pin.restaurant.deals[0] ?? "" },
+                  pin.restaurant.deals[1]
+                    ? { id: `${pin.id}-1`, title: pin.restaurant.deals[1] }
+                    : undefined,
+                ]}
+                socialProof={{
+                  variant: pin.restaurant.socialProof!.variant,
+                  quote:   pin.restaurant.socialProof!.quote,
+                  names:   pin.restaurant.socialProof!.names,
+                  avatars: pin.restaurant.socialProof!.avatars,
+                }}
+                onViewDetail={() => {
+                  setListOverlayOpen(false);
+                  setDetailPinId(pin.id);
+                }}
+                onBookDeal={(dealId) => {
+                  const idx    = parseInt(dealId.split("-").pop() ?? "0", 10);
+                  const detail = getRestaurantDetail(pin.id);
+                  const deal   = detail?.dealEntries[idx];
+                  if (deal && detail) setBookingDeal({
+                    deal,
+                    restaurantName: pin.restaurant.name,
+                    imageSrc:       pin.restaurant.imageSrc,
+                    address:        detail.address,
+                    neighborhood:   detail.neighborhood,
+                    distance:       pin.restaurant.distance,
+                    lat:            pin.lat,
+                    lng:            pin.lng,
+                  });
+                }}
+              />
+            ))}
+            {/* Spacer so last card clears Map button + tab bar */}
+            <div style={{ height: TAB_BAR_H + 72 }} />
+          </div>
+        </div>
+
+        {/* Map button — above tab bar */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2"
+          style={{ bottom: TAB_BAR_H + 16, zIndex: 1 }}
+        >
+          <button
+            onClick={() => setListOverlayOpen(false)}
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl"
+            style={{
+              background: "#11301D",
+              color:      "#FEFEFE",
+              fontFamily: "var(--font-poppins)",
+              fontSize:   16,
+              fontWeight: 600,
+            }}
+          >
+            <span>🗺️</span>
+            <span>Map</span>
+          </button>
+        </div>
+      </div>
 
       {/* ── TAB BAR ───────────────────────────────────────────────────── */}
       <div
