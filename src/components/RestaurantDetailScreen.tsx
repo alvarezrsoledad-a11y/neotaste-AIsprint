@@ -763,9 +763,9 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
       const titleBottom = titleRef.current.offsetTop + titleRef.current.offsetHeight;
       setPastTitle(st + BTN_ROW_H >= titleBottom);
     }
-    // pastTabs: top of inline tabs has scrolled above the nav bar
-    if (inlineTabsRef.current) {
-      setPastTabs(st + BTN_ROW_H >= inlineTabsRef.current.offsetTop);
+    // pastTabs: Deals section title has reached the nav bar
+    if (overviewRef.current) {
+      setPastTabs(st + BTN_ROW_H >= overviewRef.current.offsetTop);
     }
 
     // ── Deals section visibility (for sticky CTA) ─────────────────────────
