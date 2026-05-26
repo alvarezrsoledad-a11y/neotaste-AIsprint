@@ -7,8 +7,10 @@ import { RestaurantListItem } from "./RestaurantListItem";
 import { RestaurantCard }     from "./RestaurantCard";
 import { RestaurantListCard } from "./RestaurantListCard";
 import { RestaurantDetailScreen, DealBookingSheet, BookingConfirmationScreen, type ConfirmedBooking, makeRef } from "./RestaurantDetailScreen";
+import { PeopleFilterSheet, type PeopleFilters } from "./PeopleFilterSheet";
 import { MAP_PINS } from "@/data/pins";
 import { type DealEntry, getRestaurantDetail } from "@/data/restaurantDetails";
+import { FRIENDS } from "@/data/people";
 
 // ── Leaflet is client-only ────────────────────────────────────────────────────
 const MapView = dynamic(
@@ -42,6 +44,7 @@ const SHEET_PEEK_H   = 68;
 const SHEET_PEEK_TOP = SCREEN_H - TAB_BAR_H - SHEET_PEEK_H; // 694
 
 const FILTER_CHIPS = [
+  { label: "People",      icon: "👥" },
   { label: "Filters",     icon: "⚙️" },
   { label: "Now",         icon: "🕐" },
   { label: "Cuisine",     icon: "🍽️" },
@@ -67,6 +70,9 @@ export function DiscoverScreen() {
   const [detailPinId, setDetailPinId]     = useState<number | null>(null);
   const [bookingDeal, setBookingDeal]         = useState<{ deal: DealEntry; restaurantName: string; imageSrc: string; address: string; neighborhood: string; distance: string; lat: number; lng: number } | null>(null);
   const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBooking | null>(null);
+  const [peopleFilterOpen, setPeopleFilterOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [activeFilters, setActiveFilters]       = useState<PeopleFilters | null>(null);
 
   // ── Fix 4: List overlay swipe-to-dismiss state ───────────────────────────
   const [listOverlayDragY, setListOverlayDragY]     = useState(0);
@@ -238,6 +244,7 @@ export function DiscoverScreen() {
           {FILTER_CHIPS.map((chip) => (
             <button
               key={chip.label}
+              onClick={chip.label === "People" ? () => setPeopleFilterOpen(true) : undefined}
               className="shrink-0 flex items-center gap-1 bg-white rounded-2xl px-3 py-2"
               style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)", fontFamily: "var(--font-poppins)" }}
             >
@@ -486,6 +493,7 @@ export function DiscoverScreen() {
             {FILTER_CHIPS.map((chip) => (
               <button
                 key={chip.label}
+                onClick={chip.label === "People" ? () => setPeopleFilterOpen(true) : undefined}
                 className="shrink-0 flex items-center gap-1 bg-white rounded-2xl px-3 py-2"
                 style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)", fontFamily: "var(--font-poppins)" }}
               >
@@ -580,6 +588,17 @@ export function DiscoverScreen() {
           </button>
         </div>
       </div>
+
+      {/* ── PEOPLE FILTER SHEET ─────────────────────────────────────── */}
+      <PeopleFilterSheet
+        isOpen={peopleFilterOpen}
+        onClose={() => setPeopleFilterOpen(false)}
+        onApply={(filters) => setActiveFilters(filters)}
+        userHasFriends={FRIENDS.length > 0}
+        friendCount={FRIENDS.length}
+        neotasterCount={10000}
+        resultCount={MAP_PINS.length}
+      />
 
       {/* ── TAB BAR ───────────────────────────────────────────────────── */}
       <div
