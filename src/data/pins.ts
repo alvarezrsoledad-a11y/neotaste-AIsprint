@@ -2,6 +2,13 @@
 export type TooltipType   = "friends" | "redemption" | "rating" | "ranking" | "new" | "community" | "plain";
 export type TrustTagType  = "friends" | "community" | "redemption";
 
+export interface SocialProof {
+  variant: "friends" | "neotasters";
+  quote:   string;
+  names:   string;   // e.g. "Mason Phillips and +13 visited"
+  avatars: string[]; // avatar URLs, stacked
+}
+
 export interface PinRestaurant {
   name:          string;
   category:      string;
@@ -15,6 +22,7 @@ export interface PinRestaurant {
   review?:       string;
   friendsCount?: string;
   avatarSrcs?:   string[];
+  socialProof?:  SocialProof;
 }
 
 export interface FriendVisit {
@@ -67,6 +75,12 @@ export const MAP_PINS: MapPin[] = [
         "/images/avatar-image-3.jpg",
         "/images/avatar-image-4.jpg",
       ],
+      socialProof: {
+        variant: "friends",
+        quote:   '"Best brunch in Mitte — the matcha latte is unmissable!"',
+        names:   "Leonie S. and +13 visited",
+        avatars: ["/images/avatar-image-1.jpg", "/images/avatar-image-2.jpg", "/images/avatar-image-3.jpg"],
+      },
     },
   },
 
@@ -94,6 +108,12 @@ export const MAP_PINS: MapPin[] = [
         "/images/avatar-image-6.jpg",
         "/images/avatar-image-7.jpg",
       ],
+      socialProof: {
+        variant: "friends",
+        quote:   '"Roastery-direct coffee + incredible vibes. Try the pour-over!"',
+        names:   "Sophie M. and +5 visited",
+        avatars: ["/images/avatar-image-5.jpg", "/images/avatar-image-6.jpg", "/images/avatar-image-7.jpg"],
+      },
     },
   },
 
@@ -121,6 +141,12 @@ export const MAP_PINS: MapPin[] = [
         "/images/avatar-image-9.jpg",
         "/images/avatar-image-10.jpg",
       ],
+      socialProof: {
+        variant: "friends",
+        quote:   '"Worth every minute of the queue. Berlin\'s best kebab, no debate."',
+        names:   "Maria H. and +8 visited",
+        avatars: ["/images/avatar-image-8.jpg", "/images/avatar-image-9.jpg", "/images/avatar-image-10.jpg"],
+      },
     },
   },
 
@@ -148,6 +174,12 @@ export const MAP_PINS: MapPin[] = [
         "/images/avatar-image-12.jpg",
         "/images/avatar-image-13.jpg",
       ],
+      socialProof: {
+        variant: "friends",
+        quote:   '"Tiny place, huge flavours. The pho broth here is incredibly deep."',
+        names:   "Julia S. and +4 visited",
+        avatars: ["/images/avatar-image-11.jpg", "/images/avatar-image-12.jpg", "/images/avatar-image-13.jpg"],
+      },
     },
   },
 
@@ -339,6 +371,12 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/restaurant-image-3.jpg",
       deals:       ["Sommelier Pairing 20% off"],
       trustTag:    { type: "community", label: "👥 8 people tried this week" },
+      socialProof: {
+        variant: "neotasters",
+        quote:   '"Exceptional wine pairings — every course was a revelation."',
+        names:   "Mason Phillips and +7 visited",
+        avatars: ["/images/avatar-image-1.jpg", "/images/avatar-image-2.jpg"],
+      },
     },
   },
 
@@ -357,6 +395,12 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/restaurant-image-4.jpg",
       deals:       ["Lunch Set 25% off", "FREE Aperitif"],
       trustTag:    { type: "community", label: "👥 12 people tried this week" },
+      socialProof: {
+        variant: "neotasters",
+        quote:   '"The slow-roasted meats here are worth every cent."',
+        names:   "Isla Anderson and +11 visited",
+        avatars: ["/images/avatar-image-5.jpg", "/images/avatar-image-6.jpg"],
+      },
     },
   },
 

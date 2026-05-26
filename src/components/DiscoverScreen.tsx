@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState, useRef, useCallback } from "react";
 import { RestaurantListItem } from "./RestaurantListItem";
-import { PinDetailCard } from "./PinDetailCard";
+import { RestaurantCard }     from "./RestaurantCard";
 import { RestaurantDetailScreen } from "./RestaurantDetailScreen";
 import { MAP_PINS } from "@/data/pins";
 
@@ -58,6 +58,7 @@ const TABS = [
 // ── Component ─────────────────────────────────────────────────────────────────
 export function DiscoverScreen() {
   const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
+  const [cardClosing, setCardClosing]     = useState(false);
   const [sheetMode, setSheetMode]         = useState<"peek" | "expanded">("peek");
   const [detailPinId, setDetailPinId]     = useState<number | null>(null);
 
@@ -101,13 +102,28 @@ export function DiscoverScreen() {
 
   // ── Pin selection callback (stable ref avoids re-creating MapView) ────────
   const handlePinSelect = useCallback((id: number | null) => {
+    setCardClosing(false);
     setSelectedPinId(id);
-    if (id !== null) setSheetMode("peek"); // collapse sheet when pin opens
+    if (id !== null) setSheetMode("peek"); // collapse sheet when card opens
+  }, []);
+
+  // Close card: animate out, then clear selection and restore sheet
+  const handleCardClose = useCallback(() => {
+    setCardClosing(true);
+    setTimeout(() => {
+      setSelectedPinId(null);
+      setCardClosing(false);
+    }, 320);
   }, []);
 
   const selectedPin = selectedPinId
     ? MAP_PINS.find((p) => p.id === selectedPinId) ?? null
     : null;
+
+  // Card is "in" when a pin is selected and we're not in the closing animation
+  const cardVisible = selectedPinId !== null && !cardClosing;
+  // Sheet is "in" when no pin is selected OR we're closing the card (sheet slides back in)
+  const sheetIn = selectedPinId === null || cardClosing;
 
   // Show floating buttons only in default map mode (no pin selected, sheet peeking)
   const showFloatingButtons = selectedPinId === null && sheetMode === "peek";
@@ -220,48 +236,62 @@ export function DiscoverScreen() {
         </div>
       )}
 
-      {/* ── PIN DETAIL CARD (shown when a pin is selected) ────────────── */}
-      {selectedPin && (
-        <div
-          className="absolute left-4 right-4 z-35"
-          style={{ bottom: TAB_BAR_H + 12 }}
-        >
-          <PinDetailCard
-            restaurant={selectedPin.restaurant}
-            pinType={selectedPin.type}
-            pinValue={selectedPin.value}
-            onClose={() => setSelectedPinId(null)}
-            onViewDetail={() => setDetailPinId(selectedPin.id)}
-          />
-        </div>
-      )}
-
-      {/* ── BOTTOM SHEET (hidden when pin selected) ───────────────────── */}
-      {selectedPinId === null && (
-        <div
-          className="absolute left-0 right-0 z-30 bg-white flex flex-col"
-          style={
-            sheetMode === "peek"
+      {/* ── RESTAURANT CARD (slides up when a pin is selected) ──────────── */}
+      <div
+        className="absolute left-4 right-4 z-35"
+        style={{ bottom: TAB_BAR_H + 12, pointerEvents: cardVisible ? "auto" : "none" }}
+      >
+        {selectedPin && (
+          <RestaurantCard
+            restaurantName={selectedPin.restaurant.name}
+            rating={parseFloat(selectedPin.restaurant.rating)}
+            reviewCount={parseInt(selectedPin.restaurant.reviewCount.replace(/[^0-9]/g, ""), 10) || 0}
+            distanceKm={parseFloat(selectedPin.restaurant.distance)}
+            cuisines={selectedPin.restaurant.category.split(", ")}
+            imageUrl={selectedPin.restaurant.imageSrc}
+            rank={selectedPin.type === "ranking" && selectedPin.value
+              ? (parseInt(selectedPin.value.replace("#", ""), 10) || undefined)
+              : undefined}
+            deals={[
+              { id: `${selectedPin.id}-0`, title: selectedPin.restaurant.deals[0] ?? "" },
+              selectedPin.restaurant.deals[1]
+                ? { id: `${selectedPin.id}-1`, title: selectedPin.restaurant.deals[1] }
+                : undefined,
+            ]}
+            socialProof={selectedPin.restaurant.socialProof
               ? {
-                  // Anchor from bottom so it stays flush with the buttons on any viewport height
-                  bottom:       TAB_BAR_H,
-                  height:       SHEET_PEEK_H,
-                  borderRadius: "24px 24px 0 0",
-                  boxShadow:    "0px -5px 6px rgba(160,160,160,0.25)",
-                  transition:   "height 0.32s cubic-bezier(0.32, 0.72, 0, 1), border-radius 0.32s ease, box-shadow 0.32s ease",
-                  overflow:     "hidden",
+                  variant: selectedPin.restaurant.socialProof.variant,
+                  quote:   selectedPin.restaurant.socialProof.quote,
+                  names:   selectedPin.restaurant.socialProof.names,
+                  avatars: selectedPin.restaurant.socialProof.avatars,
                 }
-              : {
-                  // Expanded: fill from below search bar down to tab bar
-                  top:          SHEET_EXPANDED_TOP,
-                  bottom:       TAB_BAR_H,
-                  borderRadius: "0",
-                  boxShadow:    "none",
-                  transition:   "top 0.32s cubic-bezier(0.32, 0.72, 0, 1), border-radius 0.32s ease, box-shadow 0.32s ease",
-                  overflow:     "hidden",
-                }
-          }
-        >
+              : undefined}
+            isExiting={cardClosing}
+            onClose={handleCardClose}
+            onBookDeal={(dealId) => console.log("Book deal:", dealId)}
+          />
+        )}
+      </div>
+
+      {/* ── BOTTOM SHEET ──────────────────────────────────────────────────
+           Always rendered. Slides down when card is active, up when card closes.
+      ─────────────────────────────────────────────────────────────────── */}
+      <div
+        className="absolute left-0 right-0 z-30 bg-white flex flex-col"
+        style={{
+          // Sheet position / size — respects peek vs expanded mode
+          ...(sheetMode === "peek"
+            ? { bottom: TAB_BAR_H, height: SHEET_PEEK_H }
+            : { top: SHEET_EXPANDED_TOP, bottom: TAB_BAR_H }),
+          borderRadius: sheetMode === "expanded" ? "0" : "24px 24px 0 0",
+          boxShadow:    sheetMode === "expanded" ? "none" : "0px -5px 6px rgba(160,160,160,0.25)",
+          overflow:     "hidden",
+          // Slide in/out based on whether card is visible
+          transform:  sheetIn ? "translateY(0)" : "translateY(110%)",
+          transition: `transform 0.38s cubic-bezier(0.32, 0.72, 0, 1), height 0.32s cubic-bezier(0.32, 0.72, 0, 1), border-radius 0.32s ease`,
+          pointerEvents: sheetIn ? "auto" : "none",
+        }}
+      >
           {/* ── Drag handle area (always visible at top of sheet) ──── */}
           <div
             className="flex-none flex flex-col items-center gap-3 px-4 pt-2 pb-0 cursor-grab active:cursor-grabbing"
@@ -303,7 +333,6 @@ export function DiscoverScreen() {
             </div>
           </div>
         </div>
-      )}
 
       {/* ── RESTAURANT DETAIL SCREEN (full-screen overlay) ───────────── */}
       {detailPinId !== null && (() => {

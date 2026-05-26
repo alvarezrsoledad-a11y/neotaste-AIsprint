@@ -119,7 +119,7 @@ export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Re-render pins whenever selectedPinId changes (active state) ──────────
+  // ── Re-render pins + pan map whenever selectedPinId changes ─────────────
   useEffect(() => {
     rootsRef.current.forEach((root, id) => {
       const pin = MAP_PINS.find((p) => p.id === id);
@@ -135,6 +135,24 @@ export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
         />
       );
     });
+
+    // Smooth pan so the active pin is visible above the RestaurantCard
+    if (selectedPinId !== null && mapInstanceRef.current) {
+      const pin = MAP_PINS.find((p) => p.id === selectedPinId);
+      if (pin) {
+        const map = mapInstanceRef.current;
+        // Visible map area above the card (~260px) + tab bar (82px) = 342px from bottom.
+        // Center of visible area above card = (mapH - 342) / 2 from top.
+        const CARD_AND_TAB   = 342;
+        const mapH           = map.getSize().y;
+        const visibleCenterY = (mapH - CARD_AND_TAB) / 2;
+        const pinContainerPt = map.latLngToContainerPoint([pin.lat, pin.lng] as [number, number]);
+        const deltaY         = pinContainerPt.y - visibleCenterY;
+        if (Math.abs(deltaY) > 10) {
+          map.panBy([0, deltaY], { animate: true, duration: 0.4, easeLinearity: 0.5 });
+        }
+      }
+    }
   }, [selectedPinId]);
 
   return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />;
