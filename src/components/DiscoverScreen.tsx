@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState, useRef, useCallback } from "react";
+import { useScrollElevation } from "@/hooks/useScrollElevation";
 import { RestaurantListItem } from "./RestaurantListItem";
 import { RestaurantCard }     from "./RestaurantCard";
 import { RestaurantListCard } from "./RestaurantListCard";
@@ -36,9 +37,9 @@ const CONTENT_AREA_TOP = STATUS_BAR_H + SEARCH_BAR_H + FILTER_CHIPS_H + SEARCH_G
 // Simpler: top-11 (44px) + h-12 (48px) + gap-3 (12px) + filter row (40px) + 8px = 152
 const SHEET_EXPANDED_TOP = 152;
 
-// When peeking: sheet top = 844 - 82 - 196 = 566
-const SHEET_PEEK_H   = 196;
-const SHEET_PEEK_TOP = SCREEN_H - TAB_BAR_H - SHEET_PEEK_H; // 566
+// When peeking: drag handle + one restaurant name only
+const SHEET_PEEK_H   = 68;
+const SHEET_PEEK_TOP = SCREEN_H - TAB_BAR_H - SHEET_PEEK_H; // 694
 
 const FILTER_CHIPS = [
   { label: "Filters",     icon: "⚙️" },
@@ -66,6 +67,15 @@ export function DiscoverScreen() {
   const [detailPinId, setDetailPinId]     = useState<number | null>(null);
   const [bookingDeal, setBookingDeal]         = useState<{ deal: DealEntry; restaurantName: string; imageSrc: string; address: string; neighborhood: string; distance: string; lat: number; lng: number } | null>(null);
   const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBooking | null>(null);
+
+  // ── Fix 4: List overlay swipe-to-dismiss state ───────────────────────────
+  const [listOverlayDragY, setListOverlayDragY]     = useState(0);
+  const listOverlayDragStartY = useRef<number | null>(null);
+  const listOverlayDragStartT = useRef(0);
+
+  // ── Fix 1: Scroll refs for elevation shadow ───────────────────────────────
+  const listScrollRef  = useRef<HTMLDivElement>(null);
+  const isHeaderElevated = useScrollElevation(listScrollRef);
 
   // ── Swipe gesture on bottom sheet drag handle ─────────────────────────────
   const dragStartY    = useRef<number | null>(null);
@@ -103,6 +113,62 @@ export function DiscoverScreen() {
       setSheetMode("peek");
     }
     scrollDragStartY.current = null;
+  };
+
+  // ── Fix 4: List overlay swipe-to-dismiss handlers ────────────────────────
+  const onListOverlayPointerDown = (e: React.PointerEvent) => {
+    listOverlayDragStartY.current = e.clientY;
+    listOverlayDragStartT.current = Date.now();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const onListOverlayPointerMove = (e: React.PointerEvent) => {
+    if (listOverlayDragStartY.current === null) return;
+    const dy = e.clientY - listOverlayDragStartY.current;
+    if (dy > 0) setListOverlayDragY(dy);
+  };
+
+  const onListOverlayPointerUp = (e: React.PointerEvent) => {
+    if (listOverlayDragStartY.current === null) return;
+    const dy = e.clientY - listOverlayDragStartY.current;
+    const dt = Math.max(Date.now() - listOverlayDragStartT.current, 1);
+    const velocity = (dy / dt) * 1000; // px/s
+    const threshold = typeof window !== "undefined" ? window.innerHeight * 0.3 : 250;
+    if (dy > threshold || velocity > 500) {
+      setListOverlayOpen(false);
+    }
+    setListOverlayDragY(0);
+    listOverlayDragStartY.current = null;
+  };
+
+  // Scroll-area variant: only initiates drag when list is scrolled to top
+  const listScrollDragStartY = useRef<number | null>(null);
+  const listScrollDragStartT = useRef(0);
+
+  const onListScrollPointerDown = (e: React.PointerEvent) => {
+    if ((listScrollRef.current?.scrollTop ?? 0) <= 2) {
+      listScrollDragStartY.current = e.clientY;
+      listScrollDragStartT.current = Date.now();
+    }
+  };
+
+  const onListScrollPointerMove = (e: React.PointerEvent) => {
+    if (listScrollDragStartY.current === null) return;
+    const dy = e.clientY - listScrollDragStartY.current;
+    if (dy > 0) setListOverlayDragY(dy);
+  };
+
+  const onListScrollPointerUp = (e: React.PointerEvent) => {
+    if (listScrollDragStartY.current === null) return;
+    const dy = e.clientY - listScrollDragStartY.current;
+    const dt = Math.max(Date.now() - listScrollDragStartT.current, 1);
+    const velocity = (dy / dt) * 1000;
+    const threshold = typeof window !== "undefined" ? window.innerHeight * 0.3 : 250;
+    if (dy > threshold || velocity > 500) {
+      setListOverlayOpen(false);
+    }
+    setListOverlayDragY(0);
+    listScrollDragStartY.current = null;
   };
 
   // ── Pin selection callback (stable ref avoids re-creating MapView) ────────
@@ -292,45 +358,20 @@ export function DiscoverScreen() {
           pointerEvents: sheetIn ? "auto" : "none",
         }}
       >
-          {/* ── Drag handle area (always visible at top of sheet) ──── */}
+          {/* ── Drag handle + single restaurant name snippet ──────── */}
           <div
-            className="flex-none flex flex-col items-center gap-3 px-4 pt-2 pb-0 cursor-grab active:cursor-grabbing"
+            className="flex flex-col items-center gap-3 px-4 pt-2 pb-3 cursor-grab active:cursor-grabbing"
             onPointerDown={onHandlePointerDown}
             onPointerUp={onHandlePointerUp}
             style={{ touchAction: "none" }}
           >
             <div className="w-11 h-1 rounded-full bg-[rgba(0,0,0,0.1)]" />
-            {sheetMode === "peek" && (
-              <h2
-                className="text-[20px] font-bold leading-[26px] text-[#0A0A0A] w-full"
-                style={{ fontFamily: "var(--font-poppins)" }}
-              >
-                Browse all deals
-              </h2>
-            )}
-          </div>
-
-          {/* ── Scrollable restaurant list ────────────────────────── */}
-          <div
-            ref={scrollRef}
-            className="flex-1 min-h-0 overflow-y-auto"
-            onPointerDown={onScrollAreaPointerDown}
-            onPointerUp={onScrollAreaPointerUp}
-            style={{ touchAction: "pan-y" }}
-          >
-            <div className="px-4 pt-3 pb-24 flex flex-col">
-              {MAP_PINS.map((pin, i) => (
-                <div key={pin.id}>
-                  <RestaurantListItem
-                    restaurant={pin.restaurant}
-                    onViewDetail={() => setDetailPinId(pin.id)}
-                  />
-                  {i < MAP_PINS.length - 1 && (
-                    <div className="h-px bg-[rgba(0,0,0,0.1)] my-4" />
-                  )}
-                </div>
-              ))}
-            </div>
+            <p
+              className="w-full text-[15px] font-semibold leading-[20px] text-[#0A0A0A] overflow-hidden text-ellipsis whitespace-nowrap"
+              style={{ fontFamily: "var(--font-poppins)" }}
+            >
+              {MAP_PINS[0]?.restaurant.name ?? ""}
+            </p>
           </div>
         </div>
 
@@ -396,17 +437,38 @@ export function DiscoverScreen() {
       <div
         className="absolute inset-0 bg-white flex flex-col"
         style={{
-          zIndex:       39,
-          transform:    listOverlayOpen ? "translateY(0)" : "translateY(100%)",
-          transition:   "transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)",
+          zIndex:        39,
+          // During drag: follow finger; otherwise spring in/out
+          transform:     listOverlayDragY > 0
+                           ? `translateY(${listOverlayDragY}px)`
+                           : listOverlayOpen ? "translateY(0)" : "translateY(100%)",
+          transition:    listOverlayDragY > 0
+                           ? "none"
+                           : "transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)",
           pointerEvents: listOverlayOpen ? "auto" : "none",
-          willChange:   "transform",
+          willChange:    "transform",
         }}
       >
-        {/* Pinned header: search bar + filter chips */}
+        {/* ── Drag handle (Fix 4: swipe-to-dismiss) ─────────────────────── */}
+        <div
+          className="flex-none flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing"
+          style={{ touchAction: "none" }}
+          onPointerDown={onListOverlayPointerDown}
+          onPointerMove={onListOverlayPointerMove}
+          onPointerUp={onListOverlayPointerUp}
+        >
+          <div className="w-11 h-1 rounded-full bg-[rgba(0,0,0,0.1)]" />
+        </div>
+
+        {/* Pinned header: search bar + filter chips (Fix 1: elevation shadow) */}
         <div
           className="flex-none flex flex-col gap-3 px-4"
-          style={{ paddingTop: "max(12px, env(safe-area-inset-top, 12px))", paddingBottom: 8 }}
+          style={{
+            paddingTop:    8,
+            paddingBottom: 8,
+            boxShadow:     isHeaderElevated ? "0 4px 12px rgba(0,0,0,0.08)" : "none",
+            transition:    "box-shadow 0.2s ease",
+          }}
         >
           <div
             className="w-full h-12 bg-white rounded-full flex items-center gap-2 px-4"
@@ -434,8 +496,15 @@ export function DiscoverScreen() {
           </div>
         </div>
 
-        {/* Scrollable restaurant list */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        {/* Scrollable restaurant list (Fix 1: elevation ref; Fix 4: scroll-drag dismiss) */}
+        <div
+          ref={listScrollRef}
+          className="flex-1 min-h-0 overflow-y-auto"
+          style={{ touchAction: "pan-y" }}
+          onPointerDown={onListScrollPointerDown}
+          onPointerMove={onListScrollPointerMove}
+          onPointerUp={onListScrollPointerUp}
+        >
           <div className="px-4">
             {MAP_PINS.map((pin) => (
               <RestaurantListCard
@@ -464,7 +533,8 @@ export function DiscoverScreen() {
                   avatars: pin.restaurant.socialProof!.avatars,
                 }}
                 onViewDetail={() => {
-                  setListOverlayOpen(false);
+                  // Keep overlay open — detail screen (z-50) covers it.
+                  // Closing detail naturally reveals the list again (Fix 2).
                   setDetailPinId(pin.id);
                 }}
                 onBookDeal={(dealId) => {
