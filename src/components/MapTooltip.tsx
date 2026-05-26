@@ -2,122 +2,184 @@
 
 import type { TooltipType } from "@/data/pins";
 
-// Design system: default bg = Grey/500 #737373, selected bg = Grey/600 #525252
-// Count badge: default = Background/Brand/Subtle #BAFAD4, selected = Background/Brand/Default #53F293
-
 interface MapTooltipProps {
-  type: TooltipType;
-  value?: string;
-  avatarSrc?: string;
-  selected?: boolean;
+  type:            TooltipType;
+  value?:          string;
+  communityCount?: string;
+  avatarSrcs?:     string[];
+  selected?:       boolean;
 }
 
-export function MapTooltip({ type, value, avatarSrc, selected = false }: MapTooltipProps) {
-  const pillBg = selected ? "#525252" : "#737373";
-  const countBadgeBg = selected ? "#53F293" : "#BAFAD4";
-
-  // Plain pin: just a green dot, no pill
-  if (type === "plain") {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-        <div style={{
-          width: selected ? 14 : 10, height: selected ? 14 : 10,
-          borderRadius: "50%",
-          background: selected ? "#3EE380" : "#53F293",
-          border: `2px solid ${selected ? "#11301D" : "#3EE380"}`,
-          transition: "all 0.15s ease",
-        }} />
-      </div>
-    );
-  }
-
+// ── Google Maps-style pill ────────────────────────────────────────────────────
+function GMPill({ children, selected }: { children: React.ReactNode; selected: boolean }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       {/* Pill */}
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 4,
-          padding: 4,
+          position: "relative",
+          background: "#FFFFFF",
+          border: `1px solid ${selected ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)"}`,
           borderRadius: 9999,
-          background: pillBg,
-          boxShadow: "0px 12px 8px rgba(10,13,18,0.08), 0px 4px 3px rgba(10,13,18,0.03)",
-          cursor: "pointer",
-          transition: "background 0.15s ease",
+          padding: "4px 9px",
+          boxShadow: selected
+            ? "0 2px 8px rgba(0,0,0,0.22)"
+            : "0 1px 4px rgba(0,0,0,0.14)",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 5,
+          whiteSpace: "nowrap",
+          transition: "box-shadow 0.15s ease, border-color 0.15s ease",
         }}
       >
-        {type === "friends" && (
-          <div style={{ display: "flex", alignItems: "center" }}>
-            {avatarSrc && (
-              <div style={{
-                width: 16, height: 16, borderRadius: "50%",
-                border: "1px solid #FEFEFE", overflow: "hidden",
-                marginRight: -4, flexShrink: 0,
-              }}>
-                <img src={avatarSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              </div>
-            )}
-            <div style={{
-              width: 16, height: 16, borderRadius: "50%",
-              background: countBadgeBg,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <span style={{ fontSize: 6, fontWeight: 700, color: "rgba(0,0,0,0.9)", lineHeight: 1 }}>
-                {value || "+2"}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {type === "redemption" && (
-          <span style={{ fontSize: 10, fontWeight: 600, color: "#FEFEFE", whiteSpace: "nowrap", lineHeight: "16px" }}>
-            🔥 {value || "3k+"}
-          </span>
-        )}
-
-        {type === "rating" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <span style={{ fontSize: 10 }}>⭐</span>
-            <span style={{ fontSize: 10, fontWeight: 600, color: "#FEFEFE", whiteSpace: "nowrap", lineHeight: "14px" }}>
-              {value || "4.7"}
-            </span>
-          </div>
-        )}
-
-        {type === "ranking" && (
-          <div style={{
-            padding: "2px 6px", borderRadius: 8,
-            background: "#FFC86A", color: "#0A0A0A",
-            fontSize: 10, fontWeight: 700, lineHeight: "12px", whiteSpace: "nowrap",
-          }}>
-            {value || "#1"}
-          </div>
-        )}
-
-        {type === "new" && (
-          <div style={{
-            padding: "2px 6px", borderRadius: 8,
-            background: "#0A0A0A", color: "#FEFEFE",
-            fontSize: 10, fontWeight: 700, lineHeight: "12px", whiteSpace: "nowrap",
-          }}>
-            NEW
-          </div>
-        )}
-
-        {type === "community" && (
-          <span style={{ fontSize: 10, fontWeight: 600, color: "#FEFEFE", whiteSpace: "nowrap", lineHeight: "16px", padding: "0 2px" }}>
-            👥 {value || "8"}
-          </span>
-        )}
+        {children}
       </div>
 
-      {/* Anchor dot */}
+      {/* Tip — rotated square clipped to show bottom-right triangle */}
+      <div
+        style={{
+          width: 8,
+          height: 8,
+          background: "#FFFFFF",
+          border: `1px solid ${selected ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)"}`,
+          borderTop: "none",
+          borderLeft: "none",
+          transform: "rotate(45deg) translateX(-50%)",
+          marginTop: -5,
+          flexShrink: 0,
+        }}
+      />
+    </div>
+  );
+}
+
+// ── Green dot (for all non-social pins) ──────────────────────────────────────
+function GreenDot({ selected }: { selected: boolean }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       <div style={{
-        width: 8, height: 8, borderRadius: "50%",
-        background: "#53F293", border: "1px solid #3EE380",
+        width:        selected ? 13 : 9,
+        height:       selected ? 13 : 9,
+        borderRadius: "50%",
+        background:   selected ? "#3EE380" : "#53F293",
+        border:       `2px solid ${selected ? "#11301D" : "#3EE380"}`,
+        transition:   "all 0.15s ease",
       }} />
     </div>
   );
+}
+
+// ── Prefix badge (#N or NEW) ──────────────────────────────────────────────────
+function Prefix({ label }: { label: string }) {
+  const isNew = label === "NEW";
+  return (
+    <span style={{
+      fontSize:     9,
+      fontWeight:   700,
+      lineHeight:   1,
+      padding:      "1px 4px",
+      borderRadius: 4,
+      background:   isNew ? "#0A0A0A" : "#FFC86A",
+      color:        isNew ? "#FFFFFF" : "#0A0A0A",
+      fontFamily:   "var(--font-poppins)",
+      letterSpacing: "0.02em",
+      flexShrink:   0,
+    }}>
+      {label}
+    </span>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+export function MapTooltip({ type, value, communityCount, avatarSrcs, selected = false }: MapTooltipProps) {
+
+  // ── Green dot: rating, redemption, plain ─────────────────────────────────
+  if (type === "rating" || type === "redemption" || type === "plain") {
+    return <GreenDot selected={selected} />;
+  }
+
+  // ── Tier 1: Friend proof ──────────────────────────────────────────────────
+  if (type === "friends") {
+    const count = value ? value.replace("+", "") : "?";
+    const shown = (avatarSrcs ?? []).slice(0, 2);
+
+    return (
+      <GMPill selected={selected}>
+        {/* Stacked avatars */}
+        {shown.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {shown.map((src, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 16, height: 16, borderRadius: "50%",
+                  border: "1.5px solid #FFFFFF",
+                  overflow: "hidden",
+                  marginLeft: i === 0 ? 0 : -5,
+                  flexShrink: 0,
+                  position: "relative",
+                  zIndex: shown.length - i,
+                }}
+              >
+                <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+            ))}
+          </div>
+        )}
+        <span style={{
+          fontSize: 11, fontWeight: 600, color: "#0A0A0A",
+          fontFamily: "var(--font-poppins)", lineHeight: 1,
+        }}>
+          {count} friends
+        </span>
+      </GMPill>
+    );
+  }
+
+  // ── Tier 2: Community proof ───────────────────────────────────────────────
+  if (type === "community") {
+    return (
+      <GMPill selected={selected}>
+        <span style={{
+          fontSize: 11, fontWeight: 600, color: "#0A0A0A",
+          fontFamily: "var(--font-poppins)", lineHeight: 1,
+        }}>
+          {value ?? "?"} tried this week
+        </span>
+      </GMPill>
+    );
+  }
+
+  // ── Ranking: prefix + community count ────────────────────────────────────
+  if (type === "ranking") {
+    return (
+      <GMPill selected={selected}>
+        <Prefix label={value ?? "#?"} />
+        <span style={{
+          fontSize: 11, fontWeight: 600, color: "#0A0A0A",
+          fontFamily: "var(--font-poppins)", lineHeight: 1,
+        }}>
+          {communityCount ?? "?"} tried this week
+        </span>
+      </GMPill>
+    );
+  }
+
+  // ── New: prefix + tried count ─────────────────────────────────────────────
+  if (type === "new") {
+    return (
+      <GMPill selected={selected}>
+        <Prefix label="NEW" />
+        <span style={{
+          fontSize: 11, fontWeight: 600, color: "#0A0A0A",
+          fontFamily: "var(--font-poppins)", lineHeight: 1,
+        }}>
+          {value ?? "?"} tried
+        </span>
+      </GMPill>
+    );
+  }
+
+  // Fallback
+  return <GreenDot selected={selected} />;
 }

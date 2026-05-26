@@ -5,9 +5,12 @@ import type { PinRestaurant, TrustTagType } from "@/data/pins";
 // Re-export a convenience type the screen can use
 export type { PinRestaurant as Restaurant };
 
-const TRUST_TAG_STYLES: Record<TrustTagType, { bg: string; color: string }> = {
-  friends:    { bg: "#FEE2E2", color: "#0A0A0A" },
-  community:  { bg: "#DFF0FF", color: "#0A0A0A" },
+const TRUST_TAG_STYLES: Record<TrustTagType, { bg: string; color: string; border?: string }> = {
+  // Friend proof: green-tinted, visually distinct from community
+  friends:    { bg: "#EDFFF5", color: "#11301D", border: "1px solid #53F293" },
+  // Community proof: cool blue-tinted, reads as "social but not personal"
+  community:  { bg: "#EFF6FF", color: "#1D4ED8" },
+  // Crowd/redemption: dark, reads as volume/popularity signal
   redemption: { bg: "rgba(0,0,0,0.5)", color: "#FEFEFE" },
 };
 
@@ -45,6 +48,7 @@ export function RestaurantListItem({ restaurant, onViewDetail }: RestaurantListI
                 style={{
                   background: TRUST_TAG_STYLES[trustTag.type].bg,
                   color: TRUST_TAG_STYLES[trustTag.type].color,
+                  border: TRUST_TAG_STYLES[trustTag.type].border ?? "none",
                   fontFamily: "var(--font-poppins)",
                 }}
               >
@@ -74,7 +78,7 @@ export function RestaurantListItem({ restaurant, onViewDetail }: RestaurantListI
             </div>
           </div>
 
-          {/* Deal chips */}
+          {/* Deal chips — tappable, first chip is primary CTA */}
           <div
             className="flex items-center gap-1 overflow-x-auto"
             style={{ scrollbarWidth: "none" }}
@@ -82,10 +86,19 @@ export function RestaurantListItem({ restaurant, onViewDetail }: RestaurantListI
             {deals.map((deal, i) => (
               <div
                 key={i}
-                className="shrink-0 px-2 py-1 rounded-full text-[12px] font-semibold leading-4 whitespace-nowrap"
-                style={{ background: "#53F293", color: "#1C1D28", fontFamily: "var(--font-poppins)" }}
+                className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-full text-[12px] font-semibold leading-4 whitespace-nowrap"
+                style={{
+                  background: i === 0 ? "#53F293" : "rgba(83,242,147,0.15)",
+                  color: "#1C1D28",
+                  fontFamily: "var(--font-poppins)",
+                  border: i === 0 ? "none" : "1px solid rgba(83,242,147,0.4)",
+                  cursor: "pointer",
+                }}
               >
                 {deal}
+                {i === 0 && (
+                  <span style={{ fontSize: 10, opacity: 0.7 }}>→</span>
+                )}
               </div>
             ))}
           </div>

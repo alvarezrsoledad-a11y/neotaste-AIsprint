@@ -178,7 +178,7 @@ export function DiscoverScreen() {
       {showFloatingButtons && (
         <div
           className="absolute left-1/2 -translate-x-1/2 z-20"
-          style={{ bottom: TAB_BAR_H + SHEET_PEEK_H + 12 }}
+          style={{ bottom: TAB_BAR_H + SHEET_PEEK_H + 16 }}
         >
           <button
             onClick={() => setSheetMode("expanded")}

@@ -17,14 +17,23 @@ export interface PinRestaurant {
   avatarSrcs?:   string[];
 }
 
+export interface FriendVisit {
+  avatarUrl: string;
+  count:     number;
+}
+
 export interface MapPin {
-  id:                 number;
-  lat:                number;
-  lng:                number;
-  type:               TooltipType;
-  value?:             string;
-  tooltipAvatarSrc?:  string;
-  restaurant:         PinRestaurant;
+  id:                  number;
+  lat:                 number;
+  lng:                 number;
+  type:                TooltipType;
+  value?:              string;       // rank label for "ranking", count for others
+  communityCount?:     string;       // for "ranking" pins: community count to show alongside rank
+  tooltipAvatarSrc?:   string;
+  tooltipAvatarSrcs?:  string[];
+  friendVisits?:       FriendVisit[]; // populated for "friends" pins
+  neotasterVisits?:    FriendVisit[]; // populated for "neotaster" pins (future)
+  restaurant:          PinRestaurant;
 }
 
 // ── Berlin data ───────────────────────────────────────────────────────────────
@@ -39,6 +48,8 @@ export const MAP_PINS: MapPin[] = [
     type: "friends",
     value: "+14",
     tooltipAvatarSrc: "/images/avatar-image-1.jpg",
+    tooltipAvatarSrcs: ["/images/avatar-image-1.jpg", "/images/avatar-image-2.jpg", "/images/avatar-image-3.jpg"],
+    friendVisits: [{ avatarUrl: "/images/avatar-image-1.jpg", count: 14 }],
     restaurant: {
       name:        "Dude's Coffee & Cake",
       category:    "Breakfast, Coffee",
@@ -47,7 +58,7 @@ export const MAP_PINS: MapPin[] = [
       distance:    "0.4 km",
       imageSrc:    "/images/cafe-image-1.jpg",
       deals:       ["2for1 Beverage", "2for1 Espresso"],
-      trustTag:    { type: "friends", label: "💕 14 Friends visited" },
+      trustTag:    { type: "friends", label: "♥ 14 friends visited" },
       review:      '"Best brunch in Mitte — the matcha latte is unmissable!"',
       friendsCount: "14",
       avatarSrcs:  [
@@ -65,6 +76,8 @@ export const MAP_PINS: MapPin[] = [
     type: "friends",
     value: "+6",
     tooltipAvatarSrc: "/images/avatar-image-5.jpg",
+    tooltipAvatarSrcs: ["/images/avatar-image-5.jpg", "/images/avatar-image-6.jpg", "/images/avatar-image-7.jpg"],
+    friendVisits: [{ avatarUrl: "/images/avatar-image-5.jpg", count: 6 }],
     restaurant: {
       name:        "The Barn",
       category:    "Specialty Coffee",
@@ -73,7 +86,7 @@ export const MAP_PINS: MapPin[] = [
       distance:    "1.8 km",
       imageSrc:    "/images/cafe-image-3.jpg",
       deals:       ["FREE Coffee", "Loyalty Stamp"],
-      trustTag:    { type: "friends", label: "💕 6 Friends visited" },
+      trustTag:    { type: "friends", label: "♥ 6 friends visited" },
       review:      '"Roastery-direct coffee + incredible vibes. Try the pour-over!"',
       friendsCount: "6",
       avatarSrcs:  [
@@ -90,6 +103,8 @@ export const MAP_PINS: MapPin[] = [
     type: "friends",
     value: "+9",
     tooltipAvatarSrc: "/images/avatar-image-8.jpg",
+    tooltipAvatarSrcs: ["/images/avatar-image-8.jpg", "/images/avatar-image-9.jpg", "/images/avatar-image-10.jpg"],
+    friendVisits: [{ avatarUrl: "/images/avatar-image-8.jpg", count: 9 }],
     restaurant: {
       name:        "Mustafa's Gemüse Kebab",
       category:    "Kebab, Street Food",
@@ -98,7 +113,7 @@ export const MAP_PINS: MapPin[] = [
       distance:    "2.1 km",
       imageSrc:    "/images/food-image-1.jpg",
       deals:       ["10% off", "FREE Drink"],
-      trustTag:    { type: "friends", label: "💕 9 Friends visited" },
+      trustTag:    { type: "friends", label: "♥ 9 friends visited" },
       review:      '"Worth every minute of the queue. Berlin\'s best kebab, no debate."',
       friendsCount: "9",
       avatarSrcs:  [
@@ -115,6 +130,8 @@ export const MAP_PINS: MapPin[] = [
     type: "friends",
     value: "+5",
     tooltipAvatarSrc: "/images/avatar-image-11.jpg",
+    tooltipAvatarSrcs: ["/images/avatar-image-11.jpg", "/images/avatar-image-12.jpg", "/images/avatar-image-13.jpg"],
+    friendVisits: [{ avatarUrl: "/images/avatar-image-11.jpg", count: 5 }],
     restaurant: {
       name:        "Hamy Café",
       category:    "Vietnamese, Noodles",
@@ -123,7 +140,7 @@ export const MAP_PINS: MapPin[] = [
       distance:    "3.3 km",
       imageSrc:    "/images/food-image-14.jpg",
       deals:       ["Pho 2for1", "FREE Spring Roll"],
-      trustTag:    { type: "friends", label: "💕 5 Friends visited" },
+      trustTag:    { type: "friends", label: "♥ 5 friends visited" },
       review:      '"Tiny place, huge flavours. The pho broth here is incredibly deep."',
       friendsCount: "5",
       avatarSrcs:  [
@@ -312,6 +329,7 @@ export const MAP_PINS: MapPin[] = [
     lat: 52.5175, lng: 13.3775,
     type: "ranking",
     value: "#1",
+    communityCount: "8",
     restaurant: {
       name:        "Rutz Restaurant",
       category:    "Modern European",
@@ -329,6 +347,7 @@ export const MAP_PINS: MapPin[] = [
     lat: 52.5310, lng: 13.3890,
     type: "ranking",
     value: "#2",
+    communityCount: "12",
     restaurant: {
       name:        "Katz Orange",
       category:    "Modern German",
@@ -346,6 +365,7 @@ export const MAP_PINS: MapPin[] = [
     lat: 52.5070, lng: 13.3505,
     type: "ranking",
     value: "#3",
+    communityCount: "6",
     restaurant: {
       name:        "Borchardt",
       category:    "Brasserie, French",
@@ -363,6 +383,7 @@ export const MAP_PINS: MapPin[] = [
     lat: 52.5090, lng: 13.3880,
     type: "ranking",
     value: "#4",
+    communityCount: "9",
     restaurant: {
       name:        "Bandol sur Mer",
       category:    "French, Seasonal",
@@ -380,6 +401,7 @@ export const MAP_PINS: MapPin[] = [
     id: 14,
     lat: 52.5158, lng: 13.4575,
     type: "new",
+    value: "12",
     restaurant: {
       name:        "Round & Edgy",
       category:    "Fusion, Modern",
@@ -397,6 +419,7 @@ export const MAP_PINS: MapPin[] = [
     id: 15,
     lat: 52.4885, lng: 13.3985,
     type: "new",
+    value: "8",
     restaurant: {
       name:        "Nobelhart & Schmutzig",
       category:    "Brutally Local",
@@ -414,6 +437,7 @@ export const MAP_PINS: MapPin[] = [
     id: 16,
     lat: 52.4985, lng: 13.3850,
     type: "new",
+    value: "21",
     restaurant: {
       name:        "BRLO Brwhouse",
       category:    "Craft Beer, Gastropub",
@@ -431,6 +455,7 @@ export const MAP_PINS: MapPin[] = [
     id: 26,
     lat: 52.4860, lng: 13.3750,
     type: "new",
+    value: "5",
     restaurant: {
       name:        "Kanaan",
       category:    "Israeli, Vegetarian",

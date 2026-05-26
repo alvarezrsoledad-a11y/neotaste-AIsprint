@@ -2,14 +2,31 @@
 
 import { useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MapTooltip } from "./MapTooltip";
-import { MAP_PINS } from "@/data/pins";
+import { MapPin, type MapPinType } from "./MapPin";
+import { MAP_PINS, type MapPin as MapPinData } from "@/data/pins";
 
 interface MapViewProps {
   selectedPinId: number | null;
-  onPinSelect: (id: number | null) => void;
+  onPinSelect:   (id: number | null) => void;
 }
 
+// ── Pin-type mapping logic (lives here, not inside MapPin) ────────────────────
+// Hierarchy: friends > plain(tiny) > everything else(default)
+// neotaster: reserved for future "NeoTasters" filter — never shown by default
+function resolvePinType(pin: MapPinData): MapPinType {
+  if (pin.type === "plain")   return "tiny";
+  if (pin.type === "friends") return "friends";
+  return "default";
+}
+
+// Parse "#1" / "#2" / "#3" → 1 / 2 / 3. Anything outside 1–3 → undefined.
+function resolveRank(pin: MapPinData): number | undefined {
+  if (pin.type !== "ranking" || !pin.value) return undefined;
+  const n = parseInt(pin.value.replace("#", ""), 10);
+  return n >= 1 && n <= 3 ? n : undefined;
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
 export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
   const mapRef         = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
@@ -49,18 +66,25 @@ export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
       // Deselect when tapping the map background
       map.on("click", () => onPinSelect(null));
 
-      // Create a marker for each pin
       MAP_PINS.forEach((pin) => {
+        const pinType = resolvePinType(pin);
+
+        // All pin variants (including tiny) use a 32×32 wrapper.
+        // The MapPin component positions tiny-default at (8,21) internally so
+        // its geographic tip aligns with the shared anchor point (12,32).
+        // overflow:visible (globals.css) lets rank tags bleed above the wrapper.
         const wrapper = document.createElement("div");
-        wrapper.style.cssText = "position:relative;overflow:visible;background:transparent;border:none;width:50px;";
+        wrapper.style.cssText =
+          "position:relative;overflow:visible;background:transparent;border:none;width:32px;height:32px;";
 
         const root = createRoot(wrapper);
         root.render(
-          <MapTooltip
-            type={pin.type}
-            value={pin.value}
-            avatarSrc={pin.tooltipAvatarSrc}
-            selected={false}
+          <MapPin
+            type={pinType}
+            state="default"
+            rank={resolveRank(pin)}
+            extraCount={pin.friendVisits?.[0]?.count}
+            avatarUrl={pin.friendVisits?.[0]?.avatarUrl ?? pin.tooltipAvatarSrc}
           />
         );
         rootsRef.current.set(pin.id, root);
@@ -68,13 +92,13 @@ export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
         const icon = L.divIcon({
           html:       wrapper,
           className:  "neotaste-pin",
-          iconSize:   [50, 42],
-          iconAnchor: [25, 42],
+          iconSize:   [32, 32],
+          iconAnchor: [12, 32],
         });
 
         const marker = L.marker([pin.lat, pin.lng], { icon }).addTo(map);
 
-        // Stop the click from bubbling to the map (which would deselect)
+        // Stop click bubbling to the map (which would deselect)
         marker.on("click", (e) => {
           L.DomEvent.stopPropagation(e);
           onPinSelect(pin.id);
@@ -95,17 +119,19 @@ export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Re-render pin tooltips whenever selectedPinId changes ─────────────────
+  // ── Re-render pins whenever selectedPinId changes (active state) ──────────
   useEffect(() => {
     rootsRef.current.forEach((root, id) => {
       const pin = MAP_PINS.find((p) => p.id === id);
       if (!pin) return;
+      const pinType = resolvePinType(pin);
       root.render(
-        <MapTooltip
-          type={pin.type}
-          value={pin.value}
-          avatarSrc={pin.tooltipAvatarSrc}
-          selected={id === selectedPinId}
+        <MapPin
+          type={pinType}
+          state={id === selectedPinId ? "active" : "default"}
+          rank={resolveRank(pin)}
+          extraCount={pin.friendVisits?.[0]?.count}
+          avatarUrl={pin.friendVisits?.[0]?.avatarUrl ?? pin.tooltipAvatarSrc}
         />
       );
     });
