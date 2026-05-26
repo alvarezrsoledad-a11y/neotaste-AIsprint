@@ -74,20 +74,20 @@ function DealCard({ deal, onBook }: { deal: DealEntry; onBook: () => void }) {
 }
 
 // ── Deal booking bottom sheet ─────────────────────────────────────────────────
-const TODAY_SLOTS = [
+export const TODAY_SLOTS = [
   { label: "TODAY",    time: "12:00 – 15:00", deals: 5 },
   { label: "TODAY",    time: "15:00 – 18:00", deals: 3 },
   { label: "TOMORROW", time: "12:00 – 19:00", deals: 7 },
 ];
 
-interface DealBookingSheetProps {
+export interface DealBookingSheetProps {
   deal: DealEntry;
   restaurantName: string;
   onClose: () => void;
   onConfirm: (slot: string) => void;
 }
 
-function DealBookingSheet({ deal, restaurantName, onClose, onConfirm }: DealBookingSheetProps) {
+export function DealBookingSheet({ deal, restaurantName, onClose, onConfirm }: DealBookingSheetProps) {
   const [selectedSlot, setSelectedSlot] = useState(0);
 
   return (

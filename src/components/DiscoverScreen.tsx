@@ -4,8 +4,9 @@ import dynamic from "next/dynamic";
 import { useState, useRef, useCallback } from "react";
 import { RestaurantListItem } from "./RestaurantListItem";
 import { RestaurantCard }     from "./RestaurantCard";
-import { RestaurantDetailScreen } from "./RestaurantDetailScreen";
+import { RestaurantDetailScreen, DealBookingSheet } from "./RestaurantDetailScreen";
 import { MAP_PINS } from "@/data/pins";
+import { type DealEntry, getRestaurantDetail } from "@/data/restaurantDetails";
 
 // ── Leaflet is client-only ────────────────────────────────────────────────────
 const MapView = dynamic(
@@ -57,11 +58,11 @@ const TABS = [
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function DiscoverScreen() {
-  const [selectedPinId, setSelectedPinId]   = useState<number | null>(null);
-  const [cardClosing, setCardClosing]       = useState(false);
-  const [sheetMode, setSheetMode]           = useState<"peek" | "expanded">("peek");
-  const [detailPinId, setDetailPinId]       = useState<number | null>(null);
-  const [initialDealIdx, setInitialDealIdx] = useState<number | undefined>(undefined);
+  const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
+  const [cardClosing, setCardClosing]     = useState(false);
+  const [sheetMode, setSheetMode]         = useState<"peek" | "expanded">("peek");
+  const [detailPinId, setDetailPinId]     = useState<number | null>(null);
+  const [bookingDeal, setBookingDeal]     = useState<{ deal: DealEntry; restaurantName: string } | null>(null);
 
   // ── Swipe gesture on bottom sheet drag handle ─────────────────────────────
   const dragStartY    = useRef<number | null>(null);
@@ -270,9 +271,10 @@ export function DiscoverScreen() {
             onViewDetail={() => { if (selectedPin) setDetailPinId(selectedPin.id); }}
             onBookDeal={(dealId) => {
               if (!selectedPin) return;
-              const idx = parseInt(dealId.split("-").pop() ?? "0", 10);
-              setInitialDealIdx(idx);
-              setDetailPinId(selectedPin.id);
+              const idx    = parseInt(dealId.split("-").pop() ?? "0", 10);
+              const detail = getRestaurantDetail(selectedPin.id);
+              const deal   = detail?.dealEntries[idx];
+              if (deal) setBookingDeal({ deal, restaurantName: selectedPin.restaurant.name });
             }}
           />
         )}
@@ -353,12 +355,23 @@ export function DiscoverScreen() {
           >
             <RestaurantDetailScreen
               pin={detailPin}
-              onClose={() => { setDetailPinId(null); setInitialDealIdx(undefined); }}
-              initialDealIdx={initialDealIdx}
+              onClose={() => setDetailPinId(null)}
             />
           </div>
         );
       })()}
+
+      {/* ── DEAL BOOKING SHEET (from RestaurantCard CTA) ─────────────── */}
+      {bookingDeal && (
+        <div className="absolute inset-0 z-50">
+          <DealBookingSheet
+            deal={bookingDeal.deal}
+            restaurantName={bookingDeal.restaurantName}
+            onClose={() => setBookingDeal(null)}
+            onConfirm={() => setBookingDeal(null)}
+          />
+        </div>
+      )}
 
       {/* ── TAB BAR ───────────────────────────────────────────────────── */}
       <div
