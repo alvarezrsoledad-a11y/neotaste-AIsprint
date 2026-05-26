@@ -12,6 +12,9 @@ interface MapViewProps {
   visiblePinIds?: Set<number> | null;
   /** When the People filter is applied, forces all pins to render as the given variant. */
   peopleFilterTab?: "friends" | "neotasters" | null;
+  /** When a specific user is the focus of the People filter, their avatar
+   *  is shown on every visible pin (overrides per-pin avatar). */
+  peopleFilterAvatarOverride?: string | null;
 }
 
 // Parse "+N" out of socialProof.names ("Mason and +73 visited" → 73)
@@ -38,7 +41,13 @@ function resolveRank(pin: MapPinData): number | undefined {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export function MapView({ selectedPinId, onPinSelect, visiblePinIds, peopleFilterTab }: MapViewProps) {
+export function MapView({
+  selectedPinId,
+  onPinSelect,
+  visiblePinIds,
+  peopleFilterTab,
+  peopleFilterAvatarOverride,
+}: MapViewProps) {
   const mapRef         = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const rootsRef       = useRef<Map<number, Root>>(new Map());
@@ -149,13 +158,16 @@ export function MapView({ selectedPinId, onPinSelect, visiblePinIds, peopleFilte
 
       if (peopleFilterTab === "friends") {
         pinType = "friends";
-        avatar  = pin.friendVisits?.[0]?.avatarUrl
+        avatar  = peopleFilterAvatarOverride
+                  ?? pin.friendVisits?.[0]?.avatarUrl
                   ?? pin.restaurant.socialProof?.avatars?.[0]
                   ?? pin.tooltipAvatarSrc;
         extra   = pin.friendVisits?.[0]?.count ?? parseExtraFromNames(pin.restaurant.socialProof?.names);
       } else if (peopleFilterTab === "neotasters") {
         pinType = "neotaster";
-        avatar  = pin.restaurant.socialProof?.avatars?.[0] ?? pin.tooltipAvatarSrc;
+        avatar  = peopleFilterAvatarOverride
+                  ?? pin.restaurant.socialProof?.avatars?.[0]
+                  ?? pin.tooltipAvatarSrc;
         extra   = parseExtraFromNames(pin.restaurant.socialProof?.names);
       }
 
@@ -192,7 +204,7 @@ export function MapView({ selectedPinId, onPinSelect, visiblePinIds, peopleFilte
         }
       }
     }
-  }, [selectedPinId, peopleFilterTab, markersReady]);
+  }, [selectedPinId, peopleFilterTab, peopleFilterAvatarOverride, markersReady]);
 
   // ── Toggle marker visibility based on visiblePinIds ─────────────────────
   useEffect(() => {

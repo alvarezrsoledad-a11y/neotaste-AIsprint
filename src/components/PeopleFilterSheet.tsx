@@ -29,15 +29,16 @@ export interface PeopleFilterSheetProps {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const CUISINE_OPTIONS: { icon: string; label: string }[] = [
-  { icon: "🍕", label: "Pizza"     },
-  { icon: "🍔", label: "Burger"    },
-  { icon: "🍣", label: "Sushi"     },
-  { icon: "🔥", label: "BBQ"       },
-  { icon: "🍝", label: "Pasta"     },
-  { icon: "🥗", label: "Bowls"     },
-  { icon: "🥪", label: "Sandwich"  },
-  { icon: "🥂", label: "Drinks"    },
-  { icon: "🍦", label: "Ice Cream" },
+  { icon: "🍕", label: "Pizza"      },
+  { icon: "🍔", label: "Burger"     },
+  { icon: "🍣", label: "Sushi"      },
+  { icon: "🔥", label: "BBQ"        },
+  { icon: "🍝", label: "Pasta"      },
+  { icon: "🥗", label: "Bowls"      },
+  { icon: "🥪", label: "Sandwich"   },
+  { icon: "🥂", label: "Drinks"     },
+  { icon: "🍦", label: "Ice Cream"  },
+  { icon: "🧋", label: "Bubble Tea" },
 ];
 
 const SPRING_ENTER = "cubic-bezier(0.32, 0.72, 0, 1)";
@@ -77,7 +78,6 @@ export function PeopleFilterSheet({
   const [selectedCuisines, setSelectedCuisines]   = useState<string[]>([]);
   const [searchAreaKm, setSearchAreaKm]           = useState<number | null>(null);
   const [selectedPersonIds, setSelectedPersonIds] = useState<string[]>([]);
-  const [showAllCuisines, setShowAllCuisines]     = useState(false);
   const [searchName, setSearchName]               = useState("");
 
   // Drag-to-dismiss
@@ -93,7 +93,6 @@ export function PeopleFilterSheet({
       setSelectedCuisines(init.cuisines);
       setSearchAreaKm(init.searchAreaKm);
       setSelectedPersonIds(init.selectedPersonIds);
-      setShowAllCuisines(false);
       setSearchName("");
       setDragY(0);
     }
@@ -106,24 +105,28 @@ export function PeopleFilterSheet({
     ? people.filter(p => p.name.toLowerCase().includes(searchName.toLowerCase()))
     : people;
 
-  const visibleCuisines = showAllCuisines ? CUISINE_OPTIONS : CUISINE_OPTIONS.slice(0, 6);
-  const hasMoreCuisines = CUISINE_OPTIONS.length > 6 && !showAllCuisines;
+  // Sum of visit counts across selected people in the active tab.
+  const selectedVisitsTotal = selectedPersonIds.reduce((sum, id) => {
+    const p = people.find(x => x.id === id);
+    return sum + (p?.visitCount ?? 0);
+  }, 0);
 
-  // Segment total (must cap CTA count)
-  const segmentTotal = tab === "friends" ? friendCount : neotasterCount;
+  // Dynamic count rules:
+  //   - If 1+ people are selected → count = sum of their visit counts (their
+  //     restaurants), then progressively reduced by cuisine + searchArea filters.
+  //   - Otherwise → fall back to resultCount, reduced by every active filter.
+  //   - Always capped at resultCount (universe of available restaurants).
+  const cuisineMultiplier  = selectedCuisines.length === 0 ? 1 : Math.max(0.2, 1 - selectedCuisines.length * 0.15);
+  const areaMultiplier     = searchAreaKm === null ? 1 : Math.max(0.2, searchAreaKm / 20);
 
-  // Mock filter reduction: each active filter trims results.
-  // Base the count on the active segment total so it visibly responds even when
-  // segmentTotal is small (e.g. 5 friends).
-  const activeFilterCount =
-    selectedCuisines.length +
-    (searchAreaKm !== null ? 1 : 0) +
-    (selectedPersonIds.length > 0 ? 1 : 0);
-  const reduction    = activeFilterCount === 0 ? 1 : Math.max(0.2, 1 - activeFilterCount * 0.15);
-  const rawCount     = Math.round(segmentTotal * reduction);
-  const dynamicCount = Math.max(1, Math.min(rawCount, segmentTotal));
-  // (resultCount kept for future use as the universe of available restaurants)
-  void resultCount;
+  const baseCount = selectedPersonIds.length > 0
+    ? selectedVisitsTotal
+    : resultCount;
+
+  const dynamicCount = Math.max(
+    1,
+    Math.min(resultCount, Math.round(baseCount * cuisineMultiplier * areaMultiplier)),
+  );
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
@@ -143,14 +146,14 @@ export function PeopleFilterSheet({
   };
 
   // Tertiary: clear selections inside the sheet but DO NOT close.
-  // Also clear applied filters on the map so the chip de-activates.
+  // Keeps the current tab (and the user's scroll position) untouched —
+  // resetting `tab` would swap the entire subsection and jump scroll to top.
+  // Also clears applied filters on the map so the chip de-activates.
   const handleReset = () => {
     setSelectedCuisines([]);
     setSearchAreaKm(null);
     setSelectedPersonIds([]);
-    setShowAllCuisines(false);
     setSearchName("");
-    setTab(userHasFriends ? "friends" : "neotasters");
     onReset();
   };
 
@@ -282,10 +285,10 @@ export function PeopleFilterSheet({
             gap:          32,  // Fix 8 — 32px between subsections
           }}
         >
-          {/* ── Fix 4 — Cuisine ───────────────────────────────────────── */}
+          {/* ── Cuisine — all 10 chips visible by default; 'Show more' is non-functional ── */}
           <Section title="Cuisine">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {visibleCuisines.map(c => (
+              {CUISINE_OPTIONS.map(c => (
                 <FilterChip
                   key={c.label}
                   label={c.label}
@@ -295,25 +298,25 @@ export function PeopleFilterSheet({
                 />
               ))}
             </div>
-            {hasMoreCuisines && (
-              <button
-                onClick={() => setShowAllCuisines(true)}
-                style={{
-                  background:     "transparent",
-                  border:         "none",
-                  padding:        "8px 0 0 0",
-                  cursor:         "pointer",
-                  fontFamily:     "var(--font-poppins)",
-                  fontSize:       13,
-                  fontWeight:     600,
-                  color:          "#0A0A0A",
-                  textDecoration: "underline",
-                  alignSelf:      "flex-start",
-                }}
-              >
-                Show more
-              </button>
-            )}
+            <button
+              type="button"
+              aria-disabled
+              onClick={() => { /* non-functional */ }}
+              style={{
+                background:     "transparent",
+                border:         "none",
+                padding:        "8px 0 0 0",
+                cursor:         "default",
+                fontFamily:     "var(--font-poppins)",
+                fontSize:       13,
+                fontWeight:     600,
+                color:          "#0A0A0A",
+                textDecoration: "underline",
+                alignSelf:      "flex-start",
+              }}
+            >
+              Show more
+            </button>
           </Section>
 
           {/* ── Search area slider ────────────────────────────────────── */}

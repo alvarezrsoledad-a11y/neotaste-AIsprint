@@ -10,7 +10,7 @@ import { RestaurantDetailScreen, DealBookingSheet, BookingConfirmationScreen, ty
 import { PeopleFilterSheet, type PeopleFilters } from "./PeopleFilterSheet";
 import { MAP_PINS } from "@/data/pins";
 import { type DealEntry, getRestaurantDetail } from "@/data/restaurantDetails";
-import { FRIENDS } from "@/data/people";
+import { FRIENDS, NEOTASTERS } from "@/data/people";
 
 // ── Leaflet is client-only ────────────────────────────────────────────────────
 const MapView = dynamic(
@@ -221,29 +221,49 @@ export function DiscoverScreen() {
       (activeFilters.searchAreaKm !== null ? 1 : 0) +
       (activeFilters.selectedPersonIds.length > 0 ? 1 : 0);
 
+  // ── Compute the set of visible pin ids based on active filters ──────────
+  // Order:
+  //   1. tab variant
+  //   2. cuisine substring match
+  //   3. search-area km
+  //   4. If users are selected → cap to sum(visitCount) of selected users
   const visiblePinIds = useMemo<Set<number> | null>(() => {
     if (activeFilters === null) return null;
-    const ids = new Set<number>();
-    for (const pin of MAP_PINS) {
-      // Filter by tab (friends vs neotasters via socialProof.variant)
-      if (pin.restaurant.socialProof && pin.restaurant.socialProof.variant !== activeFilters.tab) continue;
 
-      // Filter by cuisine (substring match against restaurant category)
+    const pool = MAP_PINS.filter(pin => {
+      if (pin.restaurant.socialProof && pin.restaurant.socialProof.variant !== activeFilters.tab) return false;
       if (activeFilters.cuisines.length > 0) {
         const cat = pin.restaurant.category.toLowerCase();
-        const anyMatch = activeFilters.cuisines.some(c => cat.includes(c.toLowerCase()));
-        if (!anyMatch) continue;
+        if (!activeFilters.cuisines.some(c => cat.includes(c.toLowerCase()))) return false;
       }
-
-      // Filter by search area (km)
       if (activeFilters.searchAreaKm !== null) {
         const d = parseFloat(pin.restaurant.distance);
-        if (!isNaN(d) && d > activeFilters.searchAreaKm) continue;
+        if (!isNaN(d) && d > activeFilters.searchAreaKm) return false;
       }
+      return true;
+    });
 
-      ids.add(pin.id);
+    // If specific people are selected, cap by sum of their visit counts.
+    if (activeFilters.selectedPersonIds.length > 0) {
+      const people = activeFilters.tab === "friends" ? FRIENDS : NEOTASTERS;
+      const cap = activeFilters.selectedPersonIds.reduce((sum, id) => {
+        const p = people.find(x => x.id === id);
+        return sum + (p?.visitCount ?? 0);
+      }, 0);
+      // Deterministic "visited by" slice: sort by id then take first `cap`.
+      const sliced = [...pool].sort((a, b) => a.id - b.id).slice(0, cap);
+      return new Set(sliced.map(p => p.id));
     }
-    return ids;
+
+    return new Set(pool.map(p => p.id));
+  }, [activeFilters]);
+
+  // Avatar of first selected person — overrides per-pin avatar on the map.
+  const peopleFilterAvatarOverride = useMemo<string | null>(() => {
+    if (!activeFilters || activeFilters.selectedPersonIds.length === 0) return null;
+    const people = activeFilters.tab === "friends" ? FRIENDS : NEOTASTERS;
+    const first = people.find(p => p.id === activeFilters.selectedPersonIds[0]);
+    return first?.avatarUrl ?? null;
   }, [activeFilters]);
 
   return (
@@ -258,6 +278,7 @@ export function DiscoverScreen() {
           onPinSelect={handlePinSelect}
           visiblePinIds={visiblePinIds}
           peopleFilterTab={activeFilters?.tab ?? null}
+          peopleFilterAvatarOverride={peopleFilterAvatarOverride}
         />
       </div>
 
