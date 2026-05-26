@@ -15,15 +15,17 @@ export interface PeopleFilters {
 }
 
 export interface PeopleFilterSheetProps {
-  isOpen:         boolean;
-  onClose:        () => void;
-  onApply:        (filters: PeopleFilters) => void;
-  onReset:        () => void;
-  initialFilters: PeopleFilters | null;
-  userHasFriends: boolean;
-  friendCount:    number;
-  neotasterCount: number;
-  resultCount:    number;
+  isOpen:             boolean;
+  onClose:            () => void;
+  onApply:            (filters: PeopleFilters) => void;
+  onReset:            () => void;
+  initialFilters:     PeopleFilters | null;
+  userHasFriends:     boolean;
+  friendCount:        number;
+  neotasterCount:     number;
+  resultCount:        number;
+  /** Computes the number of restaurants that would match the given draft. */
+  computeResultCount: (draft: PeopleFilters) => number;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -71,6 +73,7 @@ export function PeopleFilterSheet({
   friendCount,
   neotasterCount,
   resultCount,
+  computeResultCount,
 }: PeopleFilterSheetProps) {
   const [tab, setTab]                             = useState<"friends" | "neotasters">(
     userHasFriends ? "friends" : "neotasters"
@@ -105,28 +108,17 @@ export function PeopleFilterSheet({
     ? people.filter(p => p.name.toLowerCase().includes(searchName.toLowerCase()))
     : people;
 
-  // Sum of visit counts across selected people in the active tab.
-  const selectedVisitsTotal = selectedPersonIds.reduce((sum, id) => {
-    const p = people.find(x => x.id === id);
-    return sum + (p?.visitCount ?? 0);
-  }, 0);
-
-  // Dynamic count rules:
-  //   - If 1+ people are selected → count = sum of their visit counts (their
-  //     restaurants), then progressively reduced by cuisine + searchArea filters.
-  //   - Otherwise → fall back to resultCount, reduced by every active filter.
-  //   - Always capped at resultCount (universe of available restaurants).
-  const cuisineMultiplier  = selectedCuisines.length === 0 ? 1 : Math.max(0.2, 1 - selectedCuisines.length * 0.15);
-  const areaMultiplier     = searchAreaKm === null ? 1 : Math.max(0.2, searchAreaKm / 20);
-
-  const baseCount = selectedPersonIds.length > 0
-    ? selectedVisitsTotal
-    : resultCount;
-
-  const dynamicCount = Math.max(
-    1,
-    Math.min(resultCount, Math.round(baseCount * cuisineMultiplier * areaMultiplier)),
-  );
+  // ── Reactive count — wired directly to draft state, recomputed every render.
+  // Cap by `resultCount` (universe of available restaurants). The CTA reflects
+  // the *exact* number of pins the map will show on apply.
+  const draftFilters: PeopleFilters = {
+    tab,
+    cuisines:          selectedCuisines,
+    searchAreaKm,
+    recency:           "Last Week",
+    selectedPersonIds,
+  };
+  const dynamicCount = Math.min(resultCount, computeResultCount(draftFilters));
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 

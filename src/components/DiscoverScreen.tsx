@@ -221,42 +221,55 @@ export function DiscoverScreen() {
       (activeFilters.searchAreaKm !== null ? 1 : 0) +
       (activeFilters.selectedPersonIds.length > 0 ? 1 : 0);
 
-  // ── Compute the set of visible pin ids based on active filters ──────────
-  // Order:
-  //   1. tab variant
-  //   2. cuisine substring match
-  //   3. search-area km
-  //   4. If users are selected → cap to sum(visitCount) of selected users
-  const visiblePinIds = useMemo<Set<number> | null>(() => {
-    if (activeFilters === null) return null;
-
-    const pool = MAP_PINS.filter(pin => {
-      if (pin.restaurant.socialProof && pin.restaurant.socialProof.variant !== activeFilters.tab) return false;
-      if (activeFilters.cuisines.length > 0) {
-        const cat = pin.restaurant.category.toLowerCase();
-        if (!activeFilters.cuisines.some(c => cat.includes(c.toLowerCase()))) return false;
+  // ── Filter logic — single source of truth shared by sheet + map ─────────
+  // Rules:
+  //   - If 1+ people are selected → visible = UNION of their visitedRestaurantIds.
+  //     (Tab only determines which user pool we draw from; it does NOT restrict
+  //     restaurants by socialProof.variant — Mason's 47 visited restaurants
+  //     should all appear regardless of each pin's variant.)
+  //   - If NO people are selected → fall back to restaurants whose
+  //     socialProof.variant matches the active tab.
+  //   - Cuisine + searchArea always intersect the result.
+  const computeFilteredPinIds = useCallback((f: PeopleFilters): Set<number> => {
+    const people = f.tab === "friends" ? FRIENDS : NEOTASTERS;
+    let baseAllowed: Set<number>;
+    if (f.selectedPersonIds.length > 0) {
+      baseAllowed = new Set<number>();
+      for (const pid of f.selectedPersonIds) {
+        const p = people.find(x => x.id === pid);
+        if (!p) continue;
+        for (const rid of p.visitedRestaurantIds) baseAllowed.add(rid);
       }
-      if (activeFilters.searchAreaKm !== null) {
-        const d = parseFloat(pin.restaurant.distance);
-        if (!isNaN(d) && d > activeFilters.searchAreaKm) return false;
+    } else {
+      baseAllowed = new Set<number>();
+      for (const pin of MAP_PINS) {
+        if (!pin.restaurant.socialProof || pin.restaurant.socialProof.variant === f.tab) {
+          baseAllowed.add(pin.id);
+        }
       }
-      return true;
-    });
-
-    // If specific people are selected, cap by sum of their visit counts.
-    if (activeFilters.selectedPersonIds.length > 0) {
-      const people = activeFilters.tab === "friends" ? FRIENDS : NEOTASTERS;
-      const cap = activeFilters.selectedPersonIds.reduce((sum, id) => {
-        const p = people.find(x => x.id === id);
-        return sum + (p?.visitCount ?? 0);
-      }, 0);
-      // Deterministic "visited by" slice: sort by id then take first `cap`.
-      const sliced = [...pool].sort((a, b) => a.id - b.id).slice(0, cap);
-      return new Set(sliced.map(p => p.id));
     }
 
-    return new Set(pool.map(p => p.id));
-  }, [activeFilters]);
+    const out = new Set<number>();
+    for (const pin of MAP_PINS) {
+      if (!baseAllowed.has(pin.id)) continue;
+
+      if (f.cuisines.length > 0) {
+        const cat = pin.restaurant.category.toLowerCase();
+        if (!f.cuisines.some(c => cat.includes(c.toLowerCase()))) continue;
+      }
+      if (f.searchAreaKm !== null) {
+        const d = parseFloat(pin.restaurant.distance);
+        if (!isNaN(d) && d > f.searchAreaKm) continue;
+      }
+      out.add(pin.id);
+    }
+    return out;
+  }, []);
+
+  const visiblePinIds = useMemo<Set<number> | null>(() => {
+    if (activeFilters === null) return null;
+    return computeFilteredPinIds(activeFilters);
+  }, [activeFilters, computeFilteredPinIds]);
 
   // Avatar of first selected person — overrides per-pin avatar on the map.
   const peopleFilterAvatarOverride = useMemo<string | null>(() => {
@@ -721,6 +734,7 @@ export function DiscoverScreen() {
         friendCount={FRIENDS.length}
         neotasterCount={10000}
         resultCount={MAP_PINS.length}
+        computeResultCount={(draft) => computeFilteredPinIds(draft).size}
       />
 
       {/* ── TAB BAR ───────────────────────────────────────────────────── */}
