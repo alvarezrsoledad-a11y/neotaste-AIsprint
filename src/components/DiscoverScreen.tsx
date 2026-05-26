@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useScrollElevation } from "@/hooks/useScrollElevation";
 import { RestaurantListItem } from "./RestaurantListItem";
 import { RestaurantCard }     from "./RestaurantCard";
@@ -71,7 +71,6 @@ export function DiscoverScreen() {
   const [bookingDeal, setBookingDeal]         = useState<{ deal: DealEntry; restaurantName: string; imageSrc: string; address: string; neighborhood: string; distance: string; lat: number; lng: number } | null>(null);
   const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBooking | null>(null);
   const [peopleFilterOpen, setPeopleFilterOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [activeFilters, setActiveFilters]       = useState<PeopleFilters | null>(null);
 
   // ── Fix 4: List overlay swipe-to-dismiss state ───────────────────────────
@@ -210,6 +209,39 @@ export function DiscoverScreen() {
 
   const sheetTop = sheetMode === "expanded" ? SHEET_EXPANDED_TOP : SHEET_PEEK_TOP;
 
+  // ── People-filter active state + map filtering (Fix 10) ─────────────────
+  const peopleFilterActive = activeFilters !== null && (
+    activeFilters.cuisines.length > 0 ||
+    activeFilters.searchAreaKm !== null ||
+    activeFilters.selectedPersonIds.length > 0 ||
+    activeFilters.tab !== (FRIENDS.length > 0 ? "friends" : "neotasters")
+  );
+
+  const visiblePinIds = useMemo<Set<number> | null>(() => {
+    if (activeFilters === null) return null;
+    const ids = new Set<number>();
+    for (const pin of MAP_PINS) {
+      // Filter by tab (friends vs neotasters via socialProof.variant)
+      if (pin.restaurant.socialProof && pin.restaurant.socialProof.variant !== activeFilters.tab) continue;
+
+      // Filter by cuisine (substring match against restaurant category)
+      if (activeFilters.cuisines.length > 0) {
+        const cat = pin.restaurant.category.toLowerCase();
+        const anyMatch = activeFilters.cuisines.some(c => cat.includes(c.toLowerCase()));
+        if (!anyMatch) continue;
+      }
+
+      // Filter by search area (km)
+      if (activeFilters.searchAreaKm !== null) {
+        const d = parseFloat(pin.restaurant.distance);
+        if (!isNaN(d) && d > activeFilters.searchAreaKm) continue;
+      }
+
+      ids.add(pin.id);
+    }
+    return ids;
+  }, [activeFilters]);
+
   return (
     <div
       className="relative bg-white overflow-hidden"
@@ -220,6 +252,7 @@ export function DiscoverScreen() {
         <MapView
           selectedPinId={selectedPinId}
           onPinSelect={handlePinSelect}
+          visiblePinIds={visiblePinIds}
         />
       </div>
 
@@ -241,19 +274,27 @@ export function DiscoverScreen() {
           className="flex items-center gap-1 overflow-x-auto"
           style={{ scrollbarWidth: "none" }}
         >
-          {FILTER_CHIPS.map((chip) => (
-            <button
-              key={chip.label}
-              onClick={chip.label === "People" ? () => setPeopleFilterOpen(true) : undefined}
-              className="shrink-0 flex items-center gap-1 bg-white rounded-2xl px-3 py-2"
-              style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)", fontFamily: "var(--font-poppins)" }}
-            >
-              <span className="text-[11px]">{chip.icon}</span>
-              <span className="text-[14px] font-semibold text-[#0A0A0A] whitespace-nowrap">
-                {chip.label}
-              </span>
-            </button>
-          ))}
+          {FILTER_CHIPS.map((chip) => {
+            const isPeople = chip.label === "People";
+            const isActive = isPeople && peopleFilterActive;
+            return (
+              <button
+                key={chip.label}
+                onClick={isPeople ? () => setPeopleFilterOpen(true) : undefined}
+                className="shrink-0 flex items-center gap-1 bg-white rounded-2xl px-3 py-2"
+                style={{
+                  boxShadow:  "0px 2px 7px rgba(67,67,67,0.25)",
+                  fontFamily: "var(--font-poppins)",
+                  border:     isActive ? "2px solid #11301D" : "1px solid transparent",
+                }}
+              >
+                <span className="text-[11px]">{chip.icon}</span>
+                <span className="text-[14px] font-semibold text-[#0A0A0A] whitespace-nowrap">
+                  {chip.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>}
 
@@ -490,17 +531,25 @@ export function DiscoverScreen() {
             </span>
           </div>
           <div className="flex items-center gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-            {FILTER_CHIPS.map((chip) => (
-              <button
-                key={chip.label}
-                onClick={chip.label === "People" ? () => setPeopleFilterOpen(true) : undefined}
-                className="shrink-0 flex items-center gap-1 bg-white rounded-2xl px-3 py-2"
-                style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)", fontFamily: "var(--font-poppins)" }}
-              >
-                <span className="text-[11px]">{chip.icon}</span>
-                <span className="text-[14px] font-semibold text-[#0A0A0A] whitespace-nowrap">{chip.label}</span>
-              </button>
-            ))}
+            {FILTER_CHIPS.map((chip) => {
+              const isPeople = chip.label === "People";
+              const isActive = isPeople && peopleFilterActive;
+              return (
+                <button
+                  key={chip.label}
+                  onClick={isPeople ? () => setPeopleFilterOpen(true) : undefined}
+                  className="shrink-0 flex items-center gap-1 bg-white rounded-2xl px-3 py-2"
+                  style={{
+                    boxShadow:  "0px 2px 7px rgba(67,67,67,0.25)",
+                    fontFamily: "var(--font-poppins)",
+                    border:     isActive ? "2px solid #11301D" : "1px solid transparent",
+                  }}
+                >
+                  <span className="text-[11px]">{chip.icon}</span>
+                  <span className="text-[14px] font-semibold text-[#0A0A0A] whitespace-nowrap">{chip.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -594,6 +643,8 @@ export function DiscoverScreen() {
         isOpen={peopleFilterOpen}
         onClose={() => setPeopleFilterOpen(false)}
         onApply={(filters) => setActiveFilters(filters)}
+        onReset={() => setActiveFilters(null)}
+        initialFilters={activeFilters}
         userHasFriends={FRIENDS.length > 0}
         friendCount={FRIENDS.length}
         neotasterCount={10000}

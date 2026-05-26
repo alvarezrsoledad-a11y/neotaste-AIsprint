@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { type Person, FRIENDS, NEOTASTERS } from "@/data/people";
+import { type Person, FRIENDS, NEOTASTERS, levelForVisits } from "@/data/people";
+import { LevelBadge } from "./LevelBadge";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,8 @@ export interface PeopleFilterSheetProps {
   isOpen:         boolean;
   onClose:        () => void;
   onApply:        (filters: PeopleFilters) => void;
+  onReset:        () => void;
+  initialFilters: PeopleFilters | null;
   userHasFriends: boolean;
   friendCount:    number;
   neotasterCount: number;
@@ -25,13 +28,36 @@ export interface PeopleFilterSheetProps {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const CUISINE_OPTIONS = [
-  "Italian", "Japanese", "Thai", "Mexican", "French",
-  "Korean", "Chinese", "Indian", "Mediterranean", "American",
+const CUISINE_OPTIONS: { icon: string; label: string }[] = [
+  { icon: "🍕", label: "Pizza"      },
+  { icon: "🍔", label: "Burger"     },
+  { icon: "🍣", label: "Sushi"      },
+  { icon: "🔥", label: "BBQ"        },
+  { icon: "🍝", label: "Pasta"      },
+  { icon: "🥗", label: "Bowls"      },
+  { icon: "🥪", label: "Sandwich"   },
+  { icon: "🥂", label: "Drinks"     },
+  { icon: "🍦", label: "Ice Cream"  },
+  { icon: "🧋", label: "Bubble Tea" },
 ];
 
 const SPRING_ENTER = "cubic-bezier(0.32, 0.72, 0, 1)";
 const SPRING_EXIT  = "cubic-bezier(0.32, 0, 0.67, 0)";
+
+const EMPTY_FILTERS: PeopleFilters = {
+  tab:               "friends",
+  cuisines:          [],
+  searchAreaKm:      null,
+  recency:           "Last Week",
+  selectedPersonIds: [],
+};
+
+// Format friend / neotaster counts ("5 friends", "10k NeoTasters")
+function formatTotal(n: number, singular: string, plural: string): string {
+  const label = n === 1 ? singular : plural;
+  if (n >= 1000) return `${Math.round(n / 100) / 10}k ${label}`;
+  return `${n} ${label}`;
+}
 
 // ── PeopleFilterSheet ─────────────────────────────────────────────────────────
 
@@ -39,6 +65,8 @@ export function PeopleFilterSheet({
   isOpen,
   onClose,
   onApply,
+  onReset,
+  initialFilters,
   userHasFriends,
   friendCount,
   neotasterCount,
@@ -54,22 +82,23 @@ export function PeopleFilterSheet({
   const [searchName, setSearchName]               = useState("");
 
   // Drag-to-dismiss
-  const [dragY, setDragY]     = useState(0);
-  const dragStartY             = useRef<number | null>(null);
-  const dragStartT             = useRef(0);
+  const [dragY, setDragY]      = useState(0);
+  const dragStartY              = useRef<number | null>(null);
+  const dragStartT              = useRef(0);
 
-  // Reset state whenever sheet is opened
+  // Restore draft from applied filters whenever sheet opens
   useEffect(() => {
     if (isOpen) {
-      setTab(userHasFriends ? "friends" : "neotasters");
-      setSelectedCuisines([]);
-      setSearchAreaKm(null);
-      setSelectedPersonIds([]);
+      const init = initialFilters ?? { ...EMPTY_FILTERS, tab: userHasFriends ? "friends" : "neotasters" };
+      setTab(init.tab);
+      setSelectedCuisines(init.cuisines);
+      setSearchAreaKm(init.searchAreaKm);
+      setSelectedPersonIds(init.selectedPersonIds);
       setShowAllCuisines(false);
       setSearchName("");
       setDragY(0);
     }
-  }, [isOpen, userHasFriends]);
+  }, [isOpen, initialFilters, userHasFriends]);
 
   // ── Derived ──────────────────────────────────────────────────────────────────
 
@@ -81,11 +110,17 @@ export function PeopleFilterSheet({
   const visibleCuisines = showAllCuisines ? CUISINE_OPTIONS : CUISINE_OPTIONS.slice(0, 6);
   const hasMoreCuisines = CUISINE_OPTIONS.length > 6 && !showAllCuisines;
 
-  // Dynamic result count: proportional to how many people are selected
-  const total      = tab === "friends" ? Math.max(friendCount, 1) : Math.max(neotasterCount, 1);
-  const dynamicCount = selectedPersonIds.length > 0
-    ? Math.max(1, Math.round(resultCount * selectedPersonIds.length / total))
-    : resultCount;
+  // Segment total (must cap CTA count)
+  const segmentTotal = tab === "friends" ? friendCount : neotasterCount;
+
+  // Mock filter reduction: each active filter trims results.
+  const activeFilterCount =
+    selectedCuisines.length +
+    (searchAreaKm !== null ? 1 : 0) +
+    (selectedPersonIds.length > 0 ? 1 : 0);
+  const reduction   = Math.max(0.25, 1 - activeFilterCount * 0.15);
+  const rawCount    = Math.round(resultCount * reduction);
+  const dynamicCount = Math.max(1, Math.min(rawCount, segmentTotal));
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
@@ -99,21 +134,19 @@ export function PeopleFilterSheet({
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
 
+  const handleApply = () => {
+    onApply({ tab, cuisines: selectedCuisines, searchAreaKm, recency: "Last Week", selectedPersonIds });
+    onClose();
+  };
+
   const handleReset = () => {
     setSelectedCuisines([]);
     setSearchAreaKm(null);
     setSelectedPersonIds([]);
     setShowAllCuisines(false);
     setSearchName("");
-  };
-
-  const handleApply = () => {
-    onApply({ tab, cuisines: selectedCuisines, searchAreaKm, recency: "", selectedPersonIds });
-    onClose();
-  };
-
-  const handleResetAndClose = () => {
-    handleReset();
+    setTab(userHasFriends ? "friends" : "neotasters");
+    onReset();
     onClose();
   };
 
@@ -135,11 +168,9 @@ export function PeopleFilterSheet({
     if (dragStartY.current === null) return;
     const dy       = e.clientY - dragStartY.current;
     const dt       = Math.max(Date.now() - dragStartT.current, 1);
-    const velocity = (dy / dt) * 1000; // px/s
+    const velocity = (dy / dt) * 1000;
     const threshold = typeof window !== "undefined" ? window.innerHeight * 0.3 : 250;
-    if (dy > threshold || velocity > 500) {
-      onClose();
-    }
+    if (dy > threshold || velocity > 500) onClose();
     setDragY(0);
     dragStartY.current = null;
   };
@@ -157,7 +188,7 @@ export function PeopleFilterSheet({
 
   return (
     <>
-      {/* ── Backdrop — intentionally does NOT close on tap ────────────────── */}
+      {/* Backdrop — does NOT close on tap */}
       <div
         style={{
           position:      "absolute",
@@ -170,7 +201,7 @@ export function PeopleFilterSheet({
         }}
       />
 
-      {/* ── Sheet ─────────────────────────────────────────────────────────── */}
+      {/* Sheet */}
       <div
         style={{
           position:      "absolute",
@@ -182,212 +213,119 @@ export function PeopleFilterSheet({
           borderRadius:  "20px 20px 0 0",
           display:       "flex",
           flexDirection: "column",
-          maxHeight:     "85vh",
+          maxHeight:     "90vh",
           transform:     sheetTransform,
           transition:    sheetTransition,
           willChange:    "transform",
           pointerEvents: isOpen ? "auto" : "none",
         }}
       >
-        {/* ── Drag handle + title ───────────────────────────────────────── */}
+        {/* ── Drag handle + H2 title ─────────────────────────────────────── */}
         <div
           style={{
-            flexShrink:     0,
-            display:        "flex",
-            flexDirection:  "column",
-            alignItems:     "center",
-            gap:            12,
-            paddingTop:     12,
-            paddingBottom:  16,
-            paddingLeft:    16,
-            paddingRight:   16,
-            cursor:         "grab",
-            touchAction:    "none",
+            flexShrink:    0,
+            display:       "flex",
+            flexDirection: "column",
+            alignItems:    "center",
+            gap:           12,
+            paddingTop:    12,
+            paddingBottom: 16,
+            paddingLeft:   16,
+            paddingRight:  16,
+            cursor:        "grab",
+            touchAction:   "none",
           }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
         >
-          <div style={{
-            width:        44,
-            height:       4,
-            borderRadius: 2,
-            background:   "rgba(0,0,0,0.1)",
-          }} />
+          <div style={{ width: 44, height: 4, borderRadius: 2, background: "rgba(0,0,0,0.1)" }} />
+          {/* Fix 1 — Heading/H2 */}
           <p style={{
-            width:      "100%",
-            fontFamily: "var(--font-poppins)",
-            fontSize:   17,
-            fontWeight: 700,
-            lineHeight: "22px",
-            color:      "#0A0A0A",
-            margin:     0,
+            width:         "100%",
+            fontFamily:    "var(--font-poppins)",
+            fontSize:      24,
+            fontWeight:    700,
+            lineHeight:    "32px",
+            letterSpacing: "-0.25px",
+            color:         "#0A0A0A",
+            margin:        0,
           }}>
             People
           </p>
         </div>
 
-        {/* ── Tab toggle: Friends / NeoTasters ─────────────────────────── */}
-        <div style={{ flexShrink: 0, paddingLeft: 16, paddingRight: 16, paddingBottom: 12 }}>
-          <div style={{
-            display:      "flex",
-            background:   "#F5F5F5",
-            borderRadius: 12,
-            padding:      3,
-          }}>
-            {(["friends", "neotasters"] as const).map(t => {
-              const isActive = tab === t;
-              const label    = t === "friends" ? "Friends" : "NeoTasters";
-              const count    = t === "friends" ? friendCount : neotasterCount;
-              return (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  style={{
-                    flex:         1,
-                    height:       36,
-                    borderRadius: 10,
-                    border:       "none",
-                    background:   isActive ? "#FEFEFE" : "transparent",
-                    boxShadow:    isActive ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
-                    cursor:       "pointer",
-                    fontFamily:   "var(--font-poppins)",
-                    fontSize:     14,
-                    fontWeight:   isActive ? 700 : 500,
-                    color:        isActive ? "#0A0A0A" : "#737373",
-                    transition:   "all 0.2s ease",
-                  }}
-                >
-                  {label} · {count.toLocaleString()}
-                </button>
-              );
-            })}
-          </div>
+        {/* ── Fix 2 — Segmented control ──────────────────────────────────── */}
+        <div style={{ flexShrink: 0, paddingLeft: 16, paddingRight: 16, paddingBottom: 16 }}>
+          <SegmentedControl
+            tab={tab}
+            onChange={setTab}
+            friendCount={friendCount}
+            neotasterCount={neotasterCount}
+          />
         </div>
 
         {/* ── Scrollable content ────────────────────────────────────────── */}
-        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingLeft: 16, paddingRight: 16 }}>
-
-          {/* NeoTasters: search by name field */}
-          {tab === "neotasters" && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{
-                display:       "flex",
-                alignItems:    "center",
-                gap:           8,
-                background:    "#F5F5F5",
-                borderRadius:  12,
-                padding:       "10px 14px",
-              }}>
-                <span style={{ fontSize: 14 }}>🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search names"
-                  value={searchName}
-                  onChange={e => setSearchName(e.target.value)}
-                  style={{
-                    flex:       1,
-                    border:     "none",
-                    background: "transparent",
-                    fontFamily: "var(--font-poppins)",
-                    fontSize:   14,
-                    fontWeight: 500,
-                    color:      "#0A0A0A",
-                    outline:    "none",
-                  }}
+        <div
+          style={{
+            flex:         1,
+            minHeight:    0,
+            overflowY:    "auto",
+            paddingLeft:  16,
+            paddingRight: 16,
+            display:      "flex",
+            flexDirection:"column",
+            gap:          32,  // Fix 8 — 32px between subsections
+          }}
+        >
+          {/* ── Fix 4 — Cuisine ───────────────────────────────────────── */}
+          <Section title="Cuisine">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {visibleCuisines.map(c => (
+                <FilterChip
+                  key={c.label}
+                  label={c.label}
+                  leftIcon={c.icon}
+                  active={selectedCuisines.includes(c.label)}
+                  onClick={() => toggleCuisine(c.label)}
                 />
-              </div>
+              ))}
             </div>
-          )}
+            {hasMoreCuisines && (
+              <button
+                onClick={() => setShowAllCuisines(true)}
+                style={{
+                  background:     "transparent",
+                  border:         "none",
+                  padding:        "8px 0 0 0",
+                  cursor:         "pointer",
+                  fontFamily:     "var(--font-poppins)",
+                  fontSize:       13,
+                  fontWeight:     600,
+                  color:          "#0A0A0A",
+                  textDecoration: "underline",
+                  alignSelf:      "flex-start",
+                }}
+              >
+                Show more
+              </button>
+            )}
+          </Section>
 
-          {/* Cuisine Style chips */}
-          <div style={{ marginBottom: 16 }}>
-            <p style={{
-              fontFamily: "var(--font-poppins)",
-              fontSize:   14,
-              fontWeight: 700,
-              color:      "#0A0A0A",
-              margin:     "0 0 8px 0",
-            }}>
-              Cuisine Style
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {visibleCuisines.map(c => {
-                const active = selectedCuisines.includes(c);
-                return (
-                  <button
-                    key={c}
-                    onClick={() => toggleCuisine(c)}
-                    style={{
-                      height:       32,
-                      borderRadius: 16,
-                      border:       `1.5px solid ${active ? "#53F293" : "#E5E5E5"}`,
-                      background:   active ? "#EEFEF4" : "#FEFEFE",
-                      paddingLeft:  12,
-                      paddingRight: 12,
-                      cursor:       "pointer",
-                      fontFamily:   "var(--font-poppins)",
-                      fontSize:     13,
-                      fontWeight:   active ? 600 : 500,
-                      color:        active ? "#0A0A0A" : "#737373",
-                      whiteSpace:   "nowrap",
-                      transition:   "all 0.15s ease",
-                    }}
-                  >
-                    {c}
-                  </button>
-                );
-              })}
-              {hasMoreCuisines && (
-                <button
-                  onClick={() => setShowAllCuisines(true)}
-                  style={{
-                    height:       32,
-                    borderRadius: 16,
-                    border:       "1.5px solid #E5E5E5",
-                    background:   "#F5F5F5",
-                    paddingLeft:  12,
-                    paddingRight: 12,
-                    cursor:       "pointer",
-                    fontFamily:   "var(--font-poppins)",
-                    fontSize:     13,
-                    fontWeight:   500,
-                    color:        "#737373",
-                    whiteSpace:   "nowrap",
-                  }}
-                >
-                  Show more
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Search area slider */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{
-              display:        "flex",
-              justifyContent: "space-between",
-              alignItems:     "center",
-              marginBottom:   8,
-            }}>
-              <p style={{
-                fontFamily: "var(--font-poppins)",
-                fontSize:   14,
-                fontWeight: 700,
-                color:      "#0A0A0A",
-                margin:     0,
-              }}>
-                Search area
-              </p>
+          {/* ── Search area slider ────────────────────────────────────── */}
+          <Section
+            title="Search area"
+            right={
               <span style={{
                 fontFamily: "var(--font-poppins)",
                 fontSize:   13,
                 fontWeight: 600,
-                color:      "#737373",
+                color:      "rgba(0,0,0,0.7)",
               }}>
                 {searchAreaKm === null ? "No limit" : `${searchAreaKm} km`}
               </span>
-            </div>
+            }
+          >
             <input
               type="range"
               min={0}
@@ -398,34 +336,55 @@ export function PeopleFilterSheet({
                 const v = parseInt(e.target.value, 10);
                 setSearchAreaKm(v === 0 ? null : v);
               }}
-              style={{ width: "100%", accentColor: "#53F293" }}
+              style={{ width: "100%", accentColor: "#11301D" }}
             />
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
               <span style={{ fontFamily: "var(--font-poppins)", fontSize: 11, color: "#B3B3B3" }}>No limit</span>
               <span style={{ fontFamily: "var(--font-poppins)", fontSize: 11, color: "#B3B3B3" }}>20 km</span>
             </div>
-          </div>
+          </Section>
 
-          {/* Divider */}
-          <div style={{ height: 1, background: "rgba(0,0,0,0.08)", marginBottom: 16 }} />
-
-          {/* People list */}
-          <div>
-            {filteredPeople.map(person => (
-              <PersonRow
-                key={person.id}
-                person={person}
-                isSelected={selectedPersonIds.includes(person.id)}
-                onToggle={() => togglePerson(person.id)}
+          {/* ── Fix 5/6 — Friends or NeoTasters subsection ──────────── */}
+          <Section title={tab === "friends" ? "Friends" : "NeoTasters"}>
+            {/* Non-functional dropdown chip */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <FilterChip
+                label="Visited: Last Week"
+                rightIcon="chevron"
+                active={false}
+                onClick={() => { /* non-functional */ }}
               />
-            ))}
-          </div>
+            </div>
 
-          {/* Bottom spacer so last row clears the pinned CTA */}
-          <div style={{ height: 100 }} />
+            {/* NeoTasters: search field */}
+            {tab === "neotasters" && (
+              <div style={{ marginTop: 12 }}>
+                <SearchBar
+                  value={searchName}
+                  onChange={setSearchName}
+                  placeholder="Search names"
+                />
+              </div>
+            )}
+
+            {/* People list */}
+            <div style={{ marginTop: 12 }}>
+              {filteredPeople.map(person => (
+                <PersonRow
+                  key={person.id}
+                  person={person}
+                  isSelected={selectedPersonIds.includes(person.id)}
+                  onToggle={() => togglePerson(person.id)}
+                />
+              ))}
+            </div>
+          </Section>
+
+          {/* Bottom spacer */}
+          <div style={{ height: 32 }} />
         </div>
 
-        {/* ── Pinned CTAs ───────────────────────────────────────────────── */}
+        {/* ── Fix 9 — Sticky CTAs ───────────────────────────────────────── */}
         <div style={{
           flexShrink:    0,
           padding:       "12px 16px",
@@ -433,14 +392,32 @@ export function PeopleFilterSheet({
           borderTop:     "1px solid rgba(0,0,0,0.08)",
           background:    "#FEFEFE",
           display:       "flex",
-          flexDirection: "column",
+          flexDirection: "row",
           gap:           8,
-          alignItems:    "center",
+          alignItems:    "stretch",
         }}>
+          <button
+            onClick={handleReset}
+            style={{
+              flex:         "0 0 auto",
+              minWidth:     120,
+              height:       48,
+              borderRadius: 12,
+              border:       "1px solid rgba(0,0,0,0.1)",
+              background:   "#FEFEFE",
+              cursor:       "pointer",
+              fontFamily:   "var(--font-poppins)",
+              fontSize:     14,
+              fontWeight:   600,
+              color:        "#0A0A0A",
+            }}
+          >
+            Reset filters
+          </button>
           <button
             onClick={handleApply}
             style={{
-              width:        "100%",
+              flex:         1,
               height:       48,
               borderRadius: 12,
               border:       "none",
@@ -454,109 +431,289 @@ export function PeopleFilterSheet({
           >
             Show {dynamicCount.toLocaleString()} results
           </button>
-          <button
-            onClick={handleResetAndClose}
-            style={{
-              background: "transparent",
-              border:     "none",
-              cursor:     "pointer",
-              fontFamily: "var(--font-poppins)",
-              fontSize:   14,
-              fontWeight: 600,
-              color:      "#737373",
-              padding:    "4px 8px",
-            }}
-          >
-            Reset filters
-          </button>
         </div>
       </div>
     </>
+  );
+
+  // ── Helper for the formatTotal function (closure access) ─────────────────
+  function SegmentedControl({
+    tab, onChange, friendCount, neotasterCount,
+  }: {
+    tab:            "friends" | "neotasters";
+    onChange:       (t: "friends" | "neotasters") => void;
+    friendCount:    number;
+    neotasterCount: number;
+  }) {
+    return (
+      <div style={{
+        display:        "flex",
+        alignItems:     "stretch",
+        border:         "1px solid rgba(0,0,0,0.1)",
+        borderRadius:   12,
+        padding:        4,
+        width:          "100%",
+        position:       "relative",
+      }}>
+        <Segment
+          isActive={tab === "friends"}
+          label="Friends"
+          description={formatTotal(friendCount, "friend", "friends")}
+          onClick={() => onChange("friends")}
+        />
+        {/* 1px vertical divider */}
+        <div style={{ width: 1, background: "rgba(0,0,0,0.1)", alignSelf: "stretch", marginTop: 4, marginBottom: 4 }} />
+        <Segment
+          isActive={tab === "neotasters"}
+          label="NeoTasters"
+          description={formatTotal(neotasterCount, "NeoTaster", "NeoTasters")}
+          onClick={() => onChange("neotasters")}
+        />
+      </div>
+    );
+  }
+}
+
+// ── Segment ───────────────────────────────────────────────────────────────────
+
+function Segment({
+  isActive, label, description, onClick,
+}: {
+  isActive:    boolean;
+  label:       string;
+  description: string;
+  onClick:     () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        flex:           1,
+        display:        "flex",
+        flexDirection:  "column",
+        alignItems:     "center",
+        justifyContent: "center",
+        gap:            2,
+        paddingTop:     12,
+        paddingBottom:  12,
+        paddingLeft:    8,
+        paddingRight:   8,
+        borderRadius:   12,
+        border:         isActive ? "2px solid #11301D" : "none",
+        background:     isActive ? "#F5F5F5" : "#FEFEFE",
+        cursor:         "pointer",
+        transition:     "background 0.15s ease, border-color 0.15s ease",
+      }}
+    >
+      <span style={{
+        fontFamily: "var(--font-poppins)",
+        fontSize:   14,
+        fontWeight: 600,
+        color:      "#0A0A0A",
+        lineHeight: "20px",
+      }}>
+        {label}
+      </span>
+      <span style={{
+        fontFamily: "var(--font-poppins)",
+        fontSize:   12,
+        fontWeight: 500,
+        color:      "rgba(0,0,0,0.7)",
+        lineHeight: "16px",
+      }}>
+        {description}
+      </span>
+    </button>
+  );
+}
+
+// ── Section wrapper (H5 title) ────────────────────────────────────────────────
+
+function Section({
+  title, right, children,
+}: {
+  title:    string;
+  right?:   React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div style={{
+        display:        "flex",
+        justifyContent: "space-between",
+        alignItems:     "center",
+        marginBottom:   12,
+      }}>
+        {/* Heading/H5 */}
+        <p style={{
+          fontFamily: "var(--font-poppins)",
+          fontSize:   16,
+          fontWeight: 600,
+          lineHeight: "22px",
+          color:      "#0A0A0A",
+          margin:     0,
+        }}>
+          {title}
+        </p>
+        {right}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── FilterChip (Figma node 385-43069) ─────────────────────────────────────────
+
+function FilterChip({
+  label, leftIcon, rightIcon, active, onClick,
+}: {
+  label:      string;
+  leftIcon?:  string;
+  rightIcon?: "chevron";
+  active:     boolean;
+  onClick:    () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display:      "inline-flex",
+        alignItems:   "center",
+        gap:          6,
+        height:       32,
+        paddingLeft:  12,
+        paddingRight: 12,
+        paddingTop:   8,
+        paddingBottom:8,
+        borderRadius: 32,
+        border:       active ? "2px solid #11301D" : "1px solid rgba(0,0,0,0.1)",
+        background:   "#FEFEFE",
+        cursor:       "pointer",
+        whiteSpace:   "nowrap",
+        transition:   "border-color 0.15s ease",
+      }}
+    >
+      {leftIcon && <span style={{ fontSize: 12, lineHeight: 1 }}>{leftIcon}</span>}
+      <span style={{
+        fontFamily: "var(--font-poppins)",
+        fontSize:   14,
+        fontWeight: 600,
+        color:      "#0A0A0A",
+        lineHeight: "16px",
+      }}>
+        {label}
+      </span>
+      {rightIcon === "chevron" && (
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+          <path d="M3 4.5L6 7.5L9 4.5" stroke="#0A0A0A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+    </button>
+  );
+}
+
+// ── SearchBar (Figma node 385-43129, resting/default) ─────────────────────────
+
+function SearchBar({
+  value, onChange, placeholder,
+}: {
+  value:       string;
+  onChange:    (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div style={{
+      display:       "flex",
+      alignItems:    "center",
+      gap:           8,
+      background:    "#F5F5F5",
+      borderRadius:  32,
+      paddingLeft:   16,
+      paddingRight:  16,
+      paddingTop:    12,
+      paddingBottom: 12,
+    }}>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <circle cx="7" cy="7" r="5" stroke="#737373" strokeWidth="1.5"/>
+        <path d="M10.5 10.5L14 14" stroke="#737373" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          flex:       1,
+          border:     "none",
+          background: "transparent",
+          fontFamily: "var(--font-poppins)",
+          fontSize:   14,
+          fontWeight: 500,
+          color:      "#0A0A0A",
+          outline:    "none",
+        }}
+      />
+    </div>
   );
 }
 
 // ── PersonRow ─────────────────────────────────────────────────────────────────
 
 function PersonRow({
-  person,
-  isSelected,
-  onToggle,
+  person, isSelected, onToggle,
 }: {
   person:     Person;
   isSelected: boolean;
   onToggle:   () => void;
 }) {
+  const level = levelForVisits(person.visitCount);
   return (
     <div
       onClick={onToggle}
       style={{
         display:       "flex",
         alignItems:    "center",
-        gap:           10,
+        gap:           12,
         paddingTop:    10,
         paddingBottom: 10,
         borderBottom:  "1px solid rgba(0,0,0,0.06)",
         cursor:        "pointer",
       }}
     >
-      {/* Avatar with optional selected ring */}
-      <div style={{ position: "relative", flexShrink: 0 }}>
-        <div style={{
-          width:        44,
-          height:       44,
-          borderRadius: "50%",
-          overflow:     "hidden",
-          border:       `2px solid ${isSelected ? "#53F293" : "transparent"}`,
-          transition:   "border-color 0.15s ease",
-        }}>
-          <img
-            src={person.avatarUrl}
-            alt={person.name}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-        </div>
-        {/* Verified badge */}
-        {person.isVerified && (
-          <div style={{
-            position:       "absolute",
-            bottom:         0,
-            right:          0,
-            width:          16,
-            height:         16,
-            borderRadius:   "50%",
-            background:     "#53F293",
-            border:         "1.5px solid #FEFEFE",
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "center",
-          }}>
-            <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-              <path
-                d="M1 3L3 5L7 1"
-                stroke="#0A0A0A"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        )}
+      {/* Avatar — no verified checkmark anymore */}
+      <div style={{
+        width:        44,
+        height:       44,
+        borderRadius: "50%",
+        overflow:     "hidden",
+        border:       `2px solid ${isSelected ? "#11301D" : "transparent"}`,
+        flexShrink:   0,
+        transition:   "border-color 0.15s ease",
+      }}>
+        <img
+          src={person.avatarUrl}
+          alt={person.name}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
       </div>
 
-      {/* Name + meta */}
+      {/* Name (with inline level badge) + meta */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{
-          fontFamily:   "var(--font-poppins)",
-          fontSize:     14,
-          fontWeight:   700,
-          color:        "#0A0A0A",
-          margin:       "0 0 2px 0",
-          overflow:     "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace:   "nowrap",
-        }}>
-          {person.name}
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+          <p style={{
+            fontFamily:   "var(--font-poppins)",
+            fontSize:     14,
+            fontWeight:   700,
+            color:        "#0A0A0A",
+            margin:       0,
+            overflow:     "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace:   "nowrap",
+          }}>
+            {person.name}
+          </p>
+          <LevelBadge level={level} />
+        </div>
         <p style={{
           fontFamily:   "var(--font-poppins)",
           fontSize:     12,
@@ -571,29 +728,16 @@ function PersonRow({
         </p>
       </div>
 
-      {/* Visit count badge */}
-      <div style={{
-        flexShrink:    0,
-        background:    "#F5F5F5",
-        borderRadius:  8,
-        paddingLeft:   8,
-        paddingRight:  8,
-        paddingTop:    4,
-        paddingBottom: 4,
-        display:       "flex",
-        alignItems:    "center",
-        gap:           3,
+      {/* Visit count — plain text, no emoji */}
+      <span style={{
+        flexShrink: 0,
+        fontFamily: "var(--font-poppins)",
+        fontSize:   12,
+        fontWeight: 600,
+        color:      "#0A0A0A",
       }}>
-        <span style={{ fontSize: 11 }}>🍽️</span>
-        <span style={{
-          fontFamily: "var(--font-poppins)",
-          fontSize:   12,
-          fontWeight: 600,
-          color:      "#0A0A0A",
-        }}>
-          {person.visitCount}
-        </span>
-      </div>
+        {person.visitCount} visits
+      </span>
 
       {/* Checkbox */}
       <div style={{
@@ -602,7 +746,7 @@ function PersonRow({
         height:         20,
         borderRadius:   6,
         border:         isSelected ? "none" : "2px solid #E5E5E5",
-        background:     isSelected ? "#53F293" : "transparent",
+        background:     isSelected ? "#11301D" : "transparent",
         display:        "flex",
         alignItems:     "center",
         justifyContent: "center",
@@ -612,7 +756,7 @@ function PersonRow({
           <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
             <path
               d="M1 4L3.5 6.5L9 1"
-              stroke="#0A0A0A"
+              stroke="#FEFEFE"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"

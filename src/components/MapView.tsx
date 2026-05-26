@@ -6,8 +6,10 @@ import { MapPin, type MapPinType } from "./MapPin";
 import { MAP_PINS, type MapPin as MapPinData } from "@/data/pins";
 
 interface MapViewProps {
-  selectedPinId: number | null;
-  onPinSelect:   (id: number | null) => void;
+  selectedPinId:  number | null;
+  onPinSelect:    (id: number | null) => void;
+  /** When provided, only pins with these ids are visible & interactive on the map. */
+  visiblePinIds?: Set<number> | null;
 }
 
 // ── Pin-type mapping logic (lives here, not inside MapPin) ────────────────────
@@ -27,10 +29,11 @@ function resolveRank(pin: MapPinData): number | undefined {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
+export function MapView({ selectedPinId, onPinSelect, visiblePinIds }: MapViewProps) {
   const mapRef         = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const rootsRef       = useRef<Map<number, Root>>(new Map());
+  const markersRef     = useRef<Map<number, import("leaflet").Marker>>(new Map());
 
   // ── Initial map setup (runs once) ─────────────────────────────────────────
   useEffect(() => {
@@ -97,6 +100,7 @@ export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
         });
 
         const marker = L.marker([pin.lat, pin.lng], { icon }).addTo(map);
+        markersRef.current.set(pin.id, marker);
 
         // Stop click bubbling to the map (which would deselect)
         marker.on("click", (e) => {
@@ -159,6 +163,19 @@ export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
       }
     }
   }, [selectedPinId]);
+
+  // ── Toggle marker visibility based on visiblePinIds ─────────────────────
+  useEffect(() => {
+    markersRef.current.forEach((marker, id) => {
+      const visible = !visiblePinIds || visiblePinIds.has(id);
+      const el = marker.getElement() as HTMLElement | undefined;
+      if (el) {
+        el.style.opacity        = visible ? "1" : "0";
+        el.style.pointerEvents  = visible ? "auto" : "none";
+        el.style.transition     = "opacity 0.25s ease";
+      }
+    });
+  }, [visiblePinIds]);
 
   return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />;
 }
