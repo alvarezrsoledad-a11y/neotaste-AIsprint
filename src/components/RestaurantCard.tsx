@@ -22,7 +22,7 @@ export interface RestaurantCardProps {
   imageUrl:       string;
   rank?:          number;                     // 1–3 → amber "#N" tag on image
   deals:          [DealOption, DealOption?];  // 1 or 2 deals
-  socialProof?:   SocialProofProps;
+  socialProof:    SocialProofProps;           // always required
   /** Whether the card is currently exiting (triggers slide-down animation) */
   isExiting:      boolean;
   onClose:        () => void;
@@ -57,7 +57,7 @@ export function RestaurantCard({
   onClose,
   onBookDeal,
 }: RestaurantCardProps) {
-  const isFriends  = socialProof?.variant === "friends";
+  const isFriends  = socialProof.variant === "friends";
   const snippetBg  = isFriends ? "#FEF2F2" : "#EEFEF4";
 
   const transform  = isExiting ? "translateY(110%)" : "translateY(0)";
@@ -158,26 +158,27 @@ export function RestaurantCard({
               </span>
             </div>
 
-            {/* Social proof snippet */}
-            {socialProof && (() => {
+            {/* Social proof snippet — always rendered */}
+            {(() => {
               const { bold, rest } = splitNames(socialProof.names);
               return (
                 <div
                   style={{
-                    background:   snippetBg,
-                    borderRadius: 8,
-                    padding:      "6px 8px",
-                    display:      "flex",
+                    background:    snippetBg,
+                    borderRadius:  8,
+                    padding:       "6px 8px",
+                    display:       "flex",
                     flexDirection: "column",
-                    gap:          4,
+                    gap:           4,
                   }}
                 >
-                  {/* Quote */}
+                  {/* Quote — italic */}
                   <p
                     style={{
                       fontFamily:   "var(--font-poppins)",
                       fontSize:     12,
                       fontWeight:   600,
+                      fontStyle:    "italic",
                       lineHeight:   "16px",
                       color:        "rgba(0,0,0,0.9)",
                       margin:       0,

@@ -136,19 +136,24 @@ export function MapView({ selectedPinId, onPinSelect }: MapViewProps) {
       );
     });
 
-    // Smooth pan so the active pin is visible above the RestaurantCard
+    // Pan only if the active pin is hidden behind the RestaurantCard.
+    // Card sits at bottom: TAB_BAR_H(82) + 12 = 94px from the container bottom.
+    // Card height with social proof ≈ 196px  →  card top = 94 + 196 = 290px from bottom.
     if (selectedPinId !== null && mapInstanceRef.current) {
       const pin = MAP_PINS.find((p) => p.id === selectedPinId);
       if (pin) {
-        const map = mapInstanceRef.current;
-        // Visible map area above the card (~260px) + tab bar (82px) = 342px from bottom.
-        // Center of visible area above card = (mapH - 342) / 2 from top.
-        const CARD_AND_TAB   = 342;
-        const mapH           = map.getSize().y;
-        const visibleCenterY = (mapH - CARD_AND_TAB) / 2;
-        const pinContainerPt = map.latLngToContainerPoint([pin.lat, pin.lng] as [number, number]);
-        const deltaY         = pinContainerPt.y - visibleCenterY;
-        if (Math.abs(deltaY) > 10) {
+        const map                = mapInstanceRef.current;
+        const mapH               = map.getSize().y;
+        const CARD_TOP_FROM_BTOM = 290;                      // px from container bottom
+        const CLEARANCE          = 16;                       // required gap above card top
+        const cardTopY           = mapH - CARD_TOP_FROM_BTOM; // px from container top
+        const maxAllowedPinY     = cardTopY - CLEARANCE;     // pin must be above this
+
+        const pinPt = map.latLngToContainerPoint([pin.lat, pin.lng] as [number, number]);
+
+        // Only pan when pin sits at or below the clearance line
+        if (pinPt.y > maxAllowedPinY) {
+          const deltaY = pinPt.y - maxAllowedPinY; // exact amount to pan down (content moves up)
           map.panBy([0, deltaY], { animate: true, duration: 0.4, easeLinearity: 0.5 });
         }
       }

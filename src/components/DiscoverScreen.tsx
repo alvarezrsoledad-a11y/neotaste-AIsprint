@@ -258,14 +258,12 @@ export function DiscoverScreen() {
                 ? { id: `${selectedPin.id}-1`, title: selectedPin.restaurant.deals[1] }
                 : undefined,
             ]}
-            socialProof={selectedPin.restaurant.socialProof
-              ? {
-                  variant: selectedPin.restaurant.socialProof.variant,
-                  quote:   selectedPin.restaurant.socialProof.quote,
-                  names:   selectedPin.restaurant.socialProof.names,
-                  avatars: selectedPin.restaurant.socialProof.avatars,
-                }
-              : undefined}
+            socialProof={{
+              variant: selectedPin.restaurant.socialProof!.variant,
+              quote:   selectedPin.restaurant.socialProof!.quote,
+              names:   selectedPin.restaurant.socialProof!.names,
+              avatars: selectedPin.restaurant.socialProof!.avatars,
+            }}
             isExiting={cardClosing}
             onClose={handleCardClose}
             onBookDeal={(dealId) => console.log("Book deal:", dealId)}

@@ -198,6 +198,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/food-image-2.jpg",
       deals:       ["2for1 Ramen", "FREE Gyoza"],
       trustTag:    { type: "redemption", label: "🔥 3k+ used this deal" },
+      socialProof: { variant: "neotasters", quote: '"The tonkotsu here is the real deal — rich and silky."', names: "Nina B. and +42 visited", avatars: ["/images/avatar-image-3.jpg", "/images/avatar-image-4.jpg"] },
     },
   },
 
@@ -215,6 +216,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/food-image-3.jpg",
       deals:       ["2for1 Burger", "FREE Fries"],
       trustTag:    { type: "redemption", label: "🔥 5k+ used this deal" },
+      socialProof: { variant: "neotasters", quote: '"Best smash burger in Berlin, full stop."', names: "Tom K. and +74 visited", avatars: ["/images/avatar-image-7.jpg", "/images/avatar-image-8.jpg"] },
     },
   },
 
@@ -232,6 +234,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/food-image-4.jpg",
       deals:       ["50% off Currywurst", "FREE Drink"],
       trustTag:    { type: "redemption", label: "🔥 1.5k+ used this deal" },
+      socialProof: { variant: "neotasters", quote: '"A Berlin institution — crispy, saucy, perfect."', names: "Lena M. and +28 visited", avatars: ["/images/avatar-image-9.jpg", "/images/avatar-image-10.jpg"] },
     },
   },
 
@@ -249,6 +252,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/cafe-image-7.jpg",
       deals:       ["Brunch 2for1", "FREE Mimosa"],
       trustTag:    { type: "redemption", label: "🔥 2k+ used this deal" },
+      socialProof: { variant: "neotasters", quote: '"Sunday brunch goals — the eggs benedict are flawless."', names: "Anna S. and +31 visited", avatars: ["/images/avatar-image-13.jpg", "/images/avatar-image-14.jpg"] },
     },
   },
 
@@ -267,6 +271,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/restaurant-image-1.jpg",
       deals:       ["Chef's Menu 20% off", "FREE Amuse-bouche"],
       trustTag:    { type: "community", label: "👥 Top rated in Berlin" },
+      socialProof: { variant: "neotasters", quote: '"Two-Michelin-star magic — every bite tells a story."', names: "Felix R. and +18 visited", avatars: ["/images/avatar-image-2.jpg", "/images/avatar-image-3.jpg"] },
     },
   },
 
@@ -284,6 +289,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/food-image-5.jpg",
       deals:       ["2for1 Ramen Mon–Thu", "FREE Karaage"],
       trustTag:    { type: "community", label: "👥 Trending this week" },
+      socialProof: { variant: "neotasters", quote: '"Perfectly balanced broth, bouncy noodles — worth the queue."', names: "Hana T. and +22 visited", avatars: ["/images/avatar-image-4.jpg", "/images/avatar-image-5.jpg"] },
     },
   },
 
@@ -301,6 +307,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/cafe-image-4.jpg",
       deals:       ["Loyalty Card", "2for1 Brunch"],
       trustTag:    { type: "community", label: "👥 Popular this month" },
+      socialProof: { variant: "neotasters", quote: '"The avocado toast is basic — the coffee is not."', names: "Mia S. and +14 visited", avatars: ["/images/avatar-image-6.jpg", "/images/avatar-image-7.jpg"] },
     },
   },
 
@@ -318,6 +325,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/restaurant-image-2.jpg",
       deals:       ["Tasting Menu 15% off"],
       trustTag:    { type: "community", label: "👥 Trending this week" },
+      socialProof: { variant: "neotasters", quote: '"Zero meat, zero compromise — fine dining at its best."', names: "Karl B. and +9 visited", avatars: ["/images/avatar-image-8.jpg", "/images/avatar-image-9.jpg"] },
     },
   },
 
@@ -335,6 +343,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/food-image-12.jpg",
       deals:       ["Happy Hour 5–7pm", "FREE Pretzel"],
       trustTag:    { type: "community", label: "👥 Trending this week" },
+      socialProof: { variant: "neotasters", quote: '"Berlin\'s oldest beer garden — magic on a sunny afternoon."', names: "Erik V. and +37 visited", avatars: ["/images/avatar-image-10.jpg", "/images/avatar-image-11.jpg"] },
     },
   },
 
@@ -352,6 +361,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/hero-image-2.jpg",
       deals:       ["Lunch Tasting 25% off"],
       trustTag:    { type: "community", label: "👥 Top rated in Berlin" },
+      socialProof: { variant: "neotasters", quote: '"Hidden garden gem — the lunchtime tasting menu is a steal."', names: "Sara L. and +12 visited", avatars: ["/images/avatar-image-12.jpg", "/images/avatar-image-13.jpg"] },
     },
   },
 
@@ -419,6 +429,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/restaurant-image-5.jpg",
       deals:       ["Schnitzel Special 20% off"],
       trustTag:    { type: "community", label: "👥 6 people tried this week" },
+      socialProof: { variant: "neotasters", quote: '"Classic French brasserie with a legendary schnitzel."', names: "Pia W. and +5 visited", avatars: ["/images/avatar-image-14.jpg", "/images/avatar-image-15.jpg"] },
     },
   },
 
@@ -437,6 +448,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/cafe-image-8.jpg",
       deals:       ["Wine Pairing 15% off", "FREE Amuse-bouche"],
       trustTag:    { type: "community", label: "👥 9 people tried this week" },
+      socialProof: { variant: "neotasters", quote: '"Intimate and seasonal — the natural wine list is exceptional."', names: "Otto F. and +8 visited", avatars: ["/images/avatar-image-1.jpg", "/images/avatar-image-3.jpg"] },
     },
   },
 
@@ -456,6 +468,7 @@ export const MAP_PINS: MapPin[] = [
       isNew:       true,
       deals:       ["Opening Special 30% off", "FREE Cocktail"],
       trustTag:    { type: "community", label: "✨ Just opened" },
+      socialProof: { variant: "neotasters", quote: '"Exciting new fusion spot — the cocktail menu alone is worth it."', names: "Zoe M. and +11 visited", avatars: ["/images/avatar-image-2.jpg", "/images/avatar-image-4.jpg"] },
     },
   },
 
@@ -474,6 +487,7 @@ export const MAP_PINS: MapPin[] = [
       isNew:       true,
       deals:       ["Opening Week Special", "Meet the Chef"],
       trustTag:    { type: "community", label: "✨ Just opened" },
+      socialProof: { variant: "neotasters", quote: '"Brutally local and brutally delicious — book fast."', names: "Kim H. and +7 visited", avatars: ["/images/avatar-image-6.jpg", "/images/avatar-image-8.jpg"] },
     },
   },
 
@@ -492,6 +506,7 @@ export const MAP_PINS: MapPin[] = [
       isNew:       true,
       deals:       ["FREE Tasting Flight", "2for1 Burgers"],
       trustTag:    { type: "community", label: "✨ Just opened" },
+      socialProof: { variant: "neotasters", quote: '"Craft beer + smash burgers — the tasting flight is a must."', names: "Jan P. and +20 visited", avatars: ["/images/avatar-image-9.jpg", "/images/avatar-image-11.jpg"] },
     },
   },
 
@@ -510,6 +525,7 @@ export const MAP_PINS: MapPin[] = [
       isNew:       true,
       deals:       ["Opening Offer 20% off", "FREE Hummus"],
       trustTag:    { type: "community", label: "✨ Just opened" },
+      socialProof: { variant: "neotasters", quote: '"Generous portions, vibrant flavours — Berlin\'s best hummus."', names: "Noa R. and +4 visited", avatars: ["/images/avatar-image-13.jpg", "/images/avatar-image-15.jpg"] },
     },
   },
 
@@ -528,6 +544,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/food-image-8.jpg",
       deals:       ["Lunch Special €8.90", "FREE Spring Roll"],
       trustTag:    { type: "community", label: "👥 31 people this week" },
+      socialProof: { variant: "neotasters", quote: '"Tiny space, enormous flavour — the pho gà is a knockout."', names: "Laura K. and +30 visited", avatars: ["/images/avatar-image-1.jpg", "/images/avatar-image-5.jpg"] },
     },
   },
 
@@ -545,6 +562,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/food-image-9.jpg",
       deals:       ["BBQ Set 20% off", "FREE Banchan"],
       trustTag:    { type: "community", label: "👥 24 people this week" },
+      socialProof: { variant: "neotasters", quote: '"Korean BBQ done right — the galbi is smoky perfection."', names: "Max D. and +23 visited", avatars: ["/images/avatar-image-2.jpg", "/images/avatar-image-6.jpg"] },
     },
   },
 
@@ -562,6 +580,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/food-image-10.jpg",
       deals:       ["2for1 Bibimbap", "FREE Soup"],
       trustTag:    { type: "community", label: "👥 18 people this week" },
+      socialProof: { variant: "neotasters", quote: '"Homestyle Korean comfort food — the doenjang jjigae warms the soul."', names: "Yuki N. and +17 visited", avatars: ["/images/avatar-image-4.jpg", "/images/avatar-image-7.jpg"] },
     },
   },
 
@@ -579,6 +598,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/cafe-image-5.jpg",
       deals:       ["Rooftop Happy Hour", "15% off Dinner"],
       trustTag:    { type: "community", label: "👥 42 people this week" },
+      socialProof: { variant: "neotasters", quote: '"Rooftop sunset drinks with a view that makes Berlin glow."', names: "Sophie B. and +41 visited", avatars: ["/images/avatar-image-3.jpg", "/images/avatar-image-8.jpg"] },
     },
   },
 
@@ -596,6 +616,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/restaurant-image-7.jpg",
       deals:       ["Sunset Dinner 20% off"],
       trustTag:    { type: "community", label: "👥 15 people this week" },
+      socialProof: { variant: "neotasters", quote: '"Skyline views, modern German cuisine — an unforgettable evening."', names: "Paul G. and +14 visited", avatars: ["/images/avatar-image-10.jpg", "/images/avatar-image-12.jpg"] },
     },
   },
 
@@ -613,6 +634,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/cafe-image-6.jpg",
       deals:       ["Cake 2for1 Sat–Sun", "FREE Coffee"],
       trustTag:    { type: "community", label: "👥 27 people this week" },
+      socialProof: { variant: "neotasters", quote: '"Charming Prenzlberg café — the flower cakes are almost too pretty to eat."', names: "Clara H. and +26 visited", avatars: ["/images/avatar-image-5.jpg", "/images/avatar-image-9.jpg"] },
     },
   },
 
@@ -630,6 +652,7 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/food-image-11.jpg",
       deals:       ["Schnitzel Deal 25% off", "FREE Beer"],
       trustTag:    { type: "community", label: "👥 19 people this week" },
+      socialProof: { variant: "neotasters", quote: '"Unpretentious, delicious Berliner comfort food at its finest."', names: "Ben A. and +18 visited", avatars: ["/images/avatar-image-11.jpg", "/images/avatar-image-14.jpg"] },
     },
   },
 
@@ -647,23 +670,24 @@ export const MAP_PINS: MapPin[] = [
       imageSrc:    "/images/hero-image-1.jpg",
       deals:       ["4-Course Menu 20% off"],
       trustTag:    { type: "community", label: "👥 33 people this week" },
+      socialProof: { variant: "neotasters", quote: '"Creative European cooking in a stunning converted factory."', names: "Rosa E. and +32 visited", avatars: ["/images/avatar-image-7.jpg", "/images/avatar-image-15.jpg"] },
     },
   },
 
   // ── PLAIN (green dot only — no social cue yet) ────────────────────────────
-  { id: 30, lat: 52.5195, lng: 13.3865, type: "plain", restaurant: { name: "Café Mutti", category: "Café, Brunch", rating: "4.3", reviewCount: "89", distance: "1.8 km", imageSrc: "/images/cafe-image-1.jpg", deals: ["Free coffee with brunch"] } },
-  { id: 31, lat: 52.5260, lng: 13.4210, type: "plain", restaurant: { name: "Silo Coffee", category: "Coffee", rating: "4.5", reviewCount: "212", distance: "2.1 km", imageSrc: "/images/cafe-image-2.jpg", deals: ["2for1 Flat White"] } },
-  { id: 32, lat: 52.5080, lng: 13.3720, type: "plain", restaurant: { name: "Spreegold", category: "Bar, German", rating: "4.2", reviewCount: "143", distance: "2.4 km", imageSrc: "/images/restaurant-image-1.jpg", deals: ["Happy Hour 2for1"] } },
-  { id: 33, lat: 52.5340, lng: 13.3640, type: "plain", restaurant: { name: "La Maison", category: "French", rating: "4.6", reviewCount: "178", distance: "2.9 km", imageSrc: "/images/restaurant-image-2.jpg", deals: ["Lunch Menu €15"] } },
-  { id: 34, lat: 52.4920, lng: 13.4390, type: "plain", restaurant: { name: "Yamazaki", category: "Japanese Bakery", rating: "4.7", reviewCount: "304", distance: "3.2 km", imageSrc: "/images/food-image-1.jpg", deals: ["10% off any pastry"] } },
-  { id: 35, lat: 52.5160, lng: 13.3560, type: "plain", restaurant: { name: "Prater Garten", category: "Beer Garden", rating: "4.4", reviewCount: "521", distance: "1.5 km", imageSrc: "/images/restaurant-image-3.jpg", deals: ["Free pretzel with beer"] } },
-  { id: 36, lat: 52.5395, lng: 13.4470, type: "plain", restaurant: { name: "Annelies", category: "Café, Vegan", rating: "4.5", reviewCount: "167", distance: "3.5 km", imageSrc: "/images/cafe-image-3.jpg", deals: ["Vegan Brunch Deal"] } },
-  { id: 37, lat: 52.4870, lng: 13.3670, type: "plain", restaurant: { name: "Golgatha", category: "Beer Garden", rating: "4.1", reviewCount: "389", distance: "3.8 km", imageSrc: "/images/restaurant-image-4.jpg", deals: ["2for1 draft beer"] } },
-  { id: 38, lat: 52.5230, lng: 13.4680, type: "plain", restaurant: { name: "Knofi", category: "Middle Eastern", rating: "4.6", reviewCount: "256", distance: "2.6 km", imageSrc: "/images/food-image-2.jpg", deals: ["Falafel plate €8"] } },
-  { id: 39, lat: 52.5100, lng: 13.3800, type: "plain", restaurant: { name: "Volt Restaurant", category: "Modern European", rating: "4.8", reviewCount: "198", distance: "2.2 km", imageSrc: "/images/restaurant-image-5.jpg", deals: ["Tasting menu 15% off"] } },
-  { id: 40, lat: 52.5360, lng: 13.3980, type: "plain", restaurant: { name: "Toca Rouge", category: "Bar, Tapas", rating: "4.3", reviewCount: "134", distance: "1.9 km", imageSrc: "/images/cafe-image-4.jpg", deals: ["Tapas 3for2"] } },
-  { id: 41, lat: 52.4960, lng: 13.4510, type: "plain", restaurant: { name: "Hops & Barley", category: "Craft Beer, Pub", rating: "4.5", reviewCount: "287", distance: "2.7 km", imageSrc: "/images/restaurant-image-6.jpg", deals: ["Free tasting flight"] } },
-  { id: 42, lat: 52.5430, lng: 13.3830, type: "plain", restaurant: { name: "Westberlin", category: "Café, Books", rating: "4.4", reviewCount: "203", distance: "3.1 km", imageSrc: "/images/cafe-image-5.jpg", deals: ["Coffee + cake €7"] } },
-  { id: 43, lat: 52.5025, lng: 13.4140, type: "plain", restaurant: { name: "Facil", category: "Fine Dining", rating: "4.9", reviewCount: "312", distance: "1.3 km", imageSrc: "/images/restaurant-image-7.jpg", deals: ["Lunch 25% off"] } },
-  { id: 44, lat: 52.5285, lng: 13.3740, type: "plain", restaurant: { name: "Bar Bobu", category: "Wine Bar", rating: "4.6", reviewCount: "145", distance: "2.0 km", imageSrc: "/images/cafe-image-6.jpg", deals: ["Natural wine 2for1"] } },
+  { id: 30, lat: 52.5195, lng: 13.3865, type: "plain", restaurant: { name: "Café Mutti",      category: "Café, Brunch",       rating: "4.3", reviewCount: "89",  distance: "1.8 km", imageSrc: "/images/cafe-image-1.jpg",        deals: ["Free coffee with brunch"],  socialProof: { variant: "neotasters", quote: '"A neighbourhood gem — cosy vibes and great filter coffee."',           names: "Lena T. and +5 visited",  avatars: ["/images/avatar-image-1.jpg",  "/images/avatar-image-2.jpg"] } } },
+  { id: 31, lat: 52.5260, lng: 13.4210, type: "plain", restaurant: { name: "Silo Coffee",     category: "Coffee",             rating: "4.5", reviewCount: "212", distance: "2.1 km", imageSrc: "/images/cafe-image-2.jpg",        deals: ["2for1 Flat White"],          socialProof: { variant: "neotasters", quote: '"Single-origin beans, beautiful latte art — the real deal."',           names: "Max K. and +8 visited",   avatars: ["/images/avatar-image-3.jpg",  "/images/avatar-image-4.jpg"] } } },
+  { id: 32, lat: 52.5080, lng: 13.3720, type: "plain", restaurant: { name: "Spreegold",       category: "Bar, German",        rating: "4.2", reviewCount: "143", distance: "2.4 km", imageSrc: "/images/restaurant-image-1.jpg", deals: ["Happy Hour 2for1"],          socialProof: { variant: "neotasters", quote: '"Good beer selection, nice canal-side terrace in summer."',             names: "Tom B. and +6 visited",   avatars: ["/images/avatar-image-5.jpg",  "/images/avatar-image-6.jpg"] } } },
+  { id: 33, lat: 52.5340, lng: 13.3640, type: "plain", restaurant: { name: "La Maison",       category: "French",             rating: "4.6", reviewCount: "178", distance: "2.9 km", imageSrc: "/images/restaurant-image-2.jpg", deals: ["Lunch Menu €15"],            socialProof: { variant: "neotasters", quote: '"Authentic Parisian bistro feel — the croque monsieur is superb."',    names: "Eva M. and +9 visited",   avatars: ["/images/avatar-image-7.jpg",  "/images/avatar-image-8.jpg"] } } },
+  { id: 34, lat: 52.4920, lng: 13.4390, type: "plain", restaurant: { name: "Yamazaki",        category: "Japanese Bakery",    rating: "4.7", reviewCount: "304", distance: "3.2 km", imageSrc: "/images/food-image-1.jpg",        deals: ["10% off any pastry"],        socialProof: { variant: "neotasters", quote: '"Japanese baking precision — the melon pan is extraordinary."',        names: "Yuki A. and +14 visited", avatars: ["/images/avatar-image-9.jpg",  "/images/avatar-image-10.jpg"] } } },
+  { id: 35, lat: 52.5160, lng: 13.3560, type: "plain", restaurant: { name: "Prater Garten",   category: "Beer Garden",        rating: "4.4", reviewCount: "521", distance: "1.5 km", imageSrc: "/images/restaurant-image-3.jpg", deals: ["Free pretzel with beer"],    socialProof: { variant: "neotasters", quote: '"Berlin\'s oldest beer garden — the atmosphere is unbeatable."',       names: "Erik S. and +21 visited", avatars: ["/images/avatar-image-11.jpg", "/images/avatar-image-12.jpg"] } } },
+  { id: 36, lat: 52.5395, lng: 13.4470, type: "plain", restaurant: { name: "Annelies",        category: "Café, Vegan",        rating: "4.5", reviewCount: "167", distance: "3.5 km", imageSrc: "/images/cafe-image-3.jpg",        deals: ["Vegan Brunch Deal"],         socialProof: { variant: "neotasters", quote: '"Plant-based brunch done beautifully — every dish is a delight."',     names: "Clara N. and +7 visited", avatars: ["/images/avatar-image-13.jpg", "/images/avatar-image-14.jpg"] } } },
+  { id: 37, lat: 52.4870, lng: 13.3670, type: "plain", restaurant: { name: "Golgatha",        category: "Beer Garden",        rating: "4.1", reviewCount: "389", distance: "3.8 km", imageSrc: "/images/restaurant-image-4.jpg", deals: ["2for1 draft beer"],          socialProof: { variant: "neotasters", quote: '"Kreuzberg park vibes with cold beer — perfect summer evening."',      names: "Lars W. and +11 visited", avatars: ["/images/avatar-image-15.jpg", "/images/avatar-image-1.jpg"] } } },
+  { id: 38, lat: 52.5230, lng: 13.4680, type: "plain", restaurant: { name: "Knofi",           category: "Middle Eastern",     rating: "4.6", reviewCount: "256", distance: "2.6 km", imageSrc: "/images/food-image-2.jpg",        deals: ["Falafel plate €8"],          socialProof: { variant: "neotasters", quote: '"Legendary falafel — crispy outside, fluffy inside, every time."',    names: "Sara O. and +16 visited", avatars: ["/images/avatar-image-2.jpg",  "/images/avatar-image-5.jpg"] } } },
+  { id: 39, lat: 52.5100, lng: 13.3800, type: "plain", restaurant: { name: "Volt Restaurant", category: "Modern European",    rating: "4.8", reviewCount: "198", distance: "2.2 km", imageSrc: "/images/restaurant-image-5.jpg", deals: ["Tasting menu 15% off"],      socialProof: { variant: "neotasters", quote: '"Substation-turned-restaurant — the tasting menu is a true journey."', names: "Finn H. and +10 visited", avatars: ["/images/avatar-image-3.jpg",  "/images/avatar-image-7.jpg"] } } },
+  { id: 40, lat: 52.5360, lng: 13.3980, type: "plain", restaurant: { name: "Toca Rouge",      category: "Bar, Tapas",         rating: "4.3", reviewCount: "134", distance: "1.9 km", imageSrc: "/images/cafe-image-4.jpg",        deals: ["Tapas 3for2"],               socialProof: { variant: "neotasters", quote: '"Lively tapas bar — the patatas bravas keep me coming back."',         names: "Mila G. and +8 visited",  avatars: ["/images/avatar-image-4.jpg",  "/images/avatar-image-6.jpg"] } } },
+  { id: 41, lat: 52.4960, lng: 13.4510, type: "plain", restaurant: { name: "Hops & Barley",   category: "Craft Beer, Pub",    rating: "4.5", reviewCount: "287", distance: "2.7 km", imageSrc: "/images/restaurant-image-6.jpg", deals: ["Free tasting flight"],       socialProof: { variant: "neotasters", quote: '"Berliner craft beer at its finest — the dark lager is outstanding."', names: "Noah P. and +13 visited", avatars: ["/images/avatar-image-8.jpg",  "/images/avatar-image-9.jpg"] } } },
+  { id: 42, lat: 52.5430, lng: 13.3830, type: "plain", restaurant: { name: "Westberlin",      category: "Café, Books",        rating: "4.4", reviewCount: "203", distance: "3.1 km", imageSrc: "/images/cafe-image-5.jpg",        deals: ["Coffee + cake €7"],          socialProof: { variant: "neotasters", quote: '"Laptop-friendly café with great coffee and an even better cake."',   names: "Jade L. and +9 visited",  avatars: ["/images/avatar-image-10.jpg", "/images/avatar-image-11.jpg"] } } },
+  { id: 43, lat: 52.5025, lng: 13.4140, type: "plain", restaurant: { name: "Facil",           category: "Fine Dining",        rating: "4.9", reviewCount: "312", distance: "1.3 km", imageSrc: "/images/restaurant-image-7.jpg", deals: ["Lunch 25% off"],             socialProof: { variant: "neotasters", quote: '"Intimate garden sanctuary — the lunch tasting is a weekday treat."',  names: "Ida F. and +15 visited",  avatars: ["/images/avatar-image-12.jpg", "/images/avatar-image-13.jpg"] } } },
+  { id: 44, lat: 52.5285, lng: 13.3740, type: "plain", restaurant: { name: "Bar Bobu",        category: "Wine Bar",           rating: "4.6", reviewCount: "145", distance: "2.0 km", imageSrc: "/images/cafe-image-6.jpg",        deals: ["Natural wine 2for1"],        socialProof: { variant: "neotasters", quote: '"Natural wines, low-key atmosphere — the perfect wind-down spot."',   names: "Remi C. and +7 visited",  avatars: ["/images/avatar-image-14.jpg", "/images/avatar-image-15.jpg"] } } },
 ];
