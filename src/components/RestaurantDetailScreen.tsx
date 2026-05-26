@@ -11,8 +11,8 @@ import { useScrollElevation } from "@/hooks/useScrollElevation";
 // ── Layout constants ──────────────────────────────────────────────────────────
 const HERO_H      = 280;
 const BTN_ROW_H   = 52;   // back button row (doubles as name bar when past hero)
-const TABBAR_H    = 44;   // tabs row
-const FIXED_H     = BTN_ROW_H + TABBAR_H; // 96 px (no fake status bar)
+const TABBAR_H    = 50;   // tabs row (16px top + 18px text + 16px bottom per Figma)
+const FIXED_H     = BTN_ROW_H + TABBAR_H; // 102 px (no fake status bar)
 const HERO_SCROLL = HERO_H - BTN_ROW_H;   // ≈228 px — when hero scrolls away
 
 // CTA palette — used by every primary CTA on this page
@@ -75,44 +75,49 @@ function DealCard({
   onBook,
 }: {
   deal:    DealEntry;
-  primary: boolean;          // first deal → green CTA; second → muted CTA
+  primary: boolean;   // true → dark brand card; false → light neutral card
   onBook:  () => void;
 }) {
-  const isLimited = /Limited/i.test(deal.validity);
+  const isLimited  = /Limited/i.test(deal.validity);
+  const chipBorder = primary ? "1px solid rgba(83,242,147,0.2)" : "1px solid rgba(0,0,0,0.1)";
+  const chipColor  = primary ? "#53F293" : "#0A0A0A";
+  // Notch vertical position (ticket punch effect) — matches Figma absolute positions
+  const notchTop   = primary ? 96 : 114;
+
   return (
     <div style={{
-      border:       "1px solid rgba(0,0,0,0.08)",
       borderRadius: 16,
-      background:   "#FEFEFE",
+      background:   primary ? "#11301D" : "#E5E5E5",
       padding:      16,
       marginBottom: 12,
+      position:     "relative",
+      overflow:     "hidden",
     }}>
       {/* Title row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-        <Icon name="bolt" size={16} color={POSITIVE} />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        {primary && <Icon name="bolt" size={16} color="#53F293" />}
         <span style={{
           fontFamily: "var(--font-poppins)",
-          fontSize:   16,
+          fontSize:   20,
           fontWeight: 700,
-          color:      "#0A0A0A",
-          lineHeight: "20px",
+          color:      primary ? "#53F293" : "#0A0A0A",
+          lineHeight: "26px",
         }}>
           {deal.title}
         </span>
       </div>
 
-      {/* Detail meta row: avg spend + limited/days */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <Icon name="fire" size={12} color="#0A0A0A" />
-          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#525252" }}>
+      {/* Chips row */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, border: chipBorder, borderRadius: 40, padding: "4px 8px" }}>
+          <Icon name="fire" size={12} color={chipColor} />
+          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 600, color: chipColor, lineHeight: "16px" }}>
             Avg. {deal.avgSpend}
           </span>
         </span>
-        <span style={{ width: 3, height: 3, borderRadius: "50%", background: "#D4D4D4" }} />
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <Icon name="clock" size={12} color="#0A0A0A" />
-          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#525252" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, border: chipBorder, borderRadius: 40, padding: "4px 8px" }}>
+          <Icon name="clock" size={12} color={chipColor} />
+          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 600, color: chipColor, lineHeight: "16px" }}>
             {isLimited ? "Limited" : deal.validity}
           </span>
         </span>
@@ -121,26 +126,31 @@ function DealCard({
       {/* Description */}
       <p style={{
         fontFamily: "var(--font-poppins)",
-        fontSize:   13,
-        color:      "#737373",
-        lineHeight: 1.5,
-        margin:     "0 0 14px",
+        fontSize:   12,
+        fontWeight: 500,
+        color:      primary ? "#53F293" : "rgba(0,0,0,0.7)",
+        lineHeight: "18px",
+        margin:     "0 0 16px",
       }}>
         {deal.description}
       </p>
 
-      {/* CTA */}
+      {/* Ticket notches — semicircles cut into left + right edges */}
+      <div style={{ position: "absolute", left: -4, top: notchTop, width: 8, height: 8, borderRadius: "50%", background: "#fff" }} />
+      <div style={{ position: "absolute", right: -4, top: notchTop, width: 8, height: 8, borderRadius: "50%", background: "#fff" }} />
+
+      {/* Book deal CTA */}
       <button
         onClick={onBook}
         style={{
           width:        "100%",
-          height:       44,
-          borderRadius: 12,
-          border:       primary ? "none" : "1px solid rgba(0,0,0,0.12)",
-          background:   primary ? CTA_BG : "#FEFEFE",
-          color:        CTA_TEXT,
+          height:       42,
+          borderRadius: 16,
+          border:       "none",
+          background:   primary ? "rgba(83,242,147,0.2)" : "#F5F5F5",
+          color:        primary ? "#53F293" : "#0A0A0A",
           fontFamily:   "var(--font-poppins)",
-          fontSize:     15,
+          fontSize:     14,
           fontWeight:   600,
           cursor:       "pointer",
         }}
@@ -817,8 +827,8 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
       <div
         style={{
           position: "absolute", top: `calc(env(safe-area-inset-top, 0px) + ${BTN_ROW_H}px)`, left: 0, right: 0, height: TABBAR_H,
-          zIndex: 40, background: "white", borderBottom: "1px solid rgba(0,0,0,0.08)",
-          display: "flex",
+          zIndex: 40, background: "white", borderBottom: "1px solid rgba(0,0,0,0.1)",
+          display: "flex", alignItems: "center", padding: "0 16px",
           opacity: pastHero ? 1 : 0, transition: "opacity 0.25s ease",
           pointerEvents: pastHero ? "auto" : "none",
           boxShadow: headerShadow,
@@ -829,12 +839,13 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
             key={tab.key}
             onClick={() => scrollTo(tab.ref)}
             style={{
-              flex: 1, padding: "10px 0 8px", background: "none", border: "none",
-              borderBottom: activeTab === tab.key ? `2.5px solid ${POSITIVE}` : "2.5px solid transparent",
+              flex: 1, padding: "16px", background: "none", border: "none",
+              borderBottom: activeTab === tab.key ? "4px solid #11301D" : "4px solid transparent",
               fontFamily: "var(--font-poppins)", fontSize: 14,
-              fontWeight: activeTab === tab.key ? 700 : 500,
+              fontWeight: 600,
               color: activeTab === tab.key ? "#0A0A0A" : "#737373",
               cursor: "pointer",
+              whiteSpace: "nowrap",
             }}
           >{tab.label}</button>
         ))}
@@ -940,8 +951,9 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
         {/* 6 ── Inline tabs (only visible before scrolling past hero) */}
         <div
           style={{
-            display: "flex", borderBottom: "1px solid rgba(0,0,0,0.08)",
-            marginTop: 16, paddingBottom: 0,
+            display: "flex", alignItems: "center", padding: "0 16px",
+            borderBottom: "1px solid rgba(0,0,0,0.1)",
+            marginTop: 16,
             opacity: pastHero ? 0 : 1, transition: "opacity 0.15s ease",
             pointerEvents: pastHero ? "none" : "auto",
           }}
@@ -951,12 +963,13 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
               key={tab.key}
               onClick={() => scrollTo(tab.ref)}
               style={{
-                flex: 1, padding: "12px 0 10px", background: "none", border: "none",
-                borderBottom: activeTab === tab.key ? `2.5px solid ${POSITIVE}` : "2.5px solid transparent",
+                flex: 1, padding: "16px", background: "none", border: "none",
+                borderBottom: activeTab === tab.key ? "4px solid #11301D" : "4px solid transparent",
                 fontFamily: "var(--font-poppins)", fontSize: 14,
-                fontWeight: activeTab === tab.key ? 700 : 500,
+                fontWeight: 600,
                 color: activeTab === tab.key ? "#0A0A0A" : "#737373",
                 cursor: "pointer",
+                whiteSpace: "nowrap",
               }}
             >{tab.label}</button>
           ))}
@@ -964,7 +977,7 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
 
         {/* ───── OVERVIEW / DEALS ───── */}
         <div ref={overviewRef} style={{ padding: "24px 16px 0", scrollMarginTop: FIXED_H }}>
-          <h2 style={{ fontFamily: "var(--font-poppins)", fontSize: 18, fontWeight: 700, color: "#0A0A0A", margin: "0 0 16px" }}>Deals</h2>
+          <h2 style={{ fontFamily: "var(--font-poppins)", fontSize: 20, fontWeight: 700, color: "#0A0A0A", lineHeight: "26px", margin: "0 0 16px" }}>Deals</h2>
           {detail.dealEntries.map((deal, i) => (
             <DealCard
               key={i}
@@ -974,14 +987,8 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
             />
           ))}
 
-          {/* "How deals work?" / "View" row */}
-          <div style={{
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "space-between",
-            paddingTop:     8,
-            paddingBottom:  8,
-          }}>
+          {/* "How deals work?" row */}
+          <div style={{ paddingTop: 8, paddingBottom: 8 }}>
             <button style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               background: "transparent", border: "none", padding: 0, cursor: "pointer",
@@ -996,19 +1003,6 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
               }}>
                 How deals work?
               </span>
-            </button>
-            <button style={{
-              background:     "transparent",
-              border:         "none",
-              padding:        0,
-              cursor:         "pointer",
-              fontFamily:     "var(--font-poppins)",
-              fontSize:       13,
-              fontWeight:     600,
-              color:          "#0A0A0A",
-              textDecoration: "underline",
-            }}>
-              View
             </button>
           </div>
         </div>
