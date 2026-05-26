@@ -585,13 +585,13 @@ function SocialProofBanner({
   if (!sp) return null;
 
   const isFriends = sp.variant === "friends";
-  const bg        = isFriends ? "#FEE2E2" : "#D8FFE7";
+  const bg        = "#fef2f2";
   const firstName = pickFirstName(sp.names);
 
   return (
     <div style={{
       background:    bg,
-      borderRadius:  16,
+      borderRadius:  8,
       padding:       "12px 16px",
       display:       "flex",
       flexDirection: "column",
@@ -616,7 +616,19 @@ function SocialProofBanner({
         gap:            12,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          {/* Avatars: 1 for Friends, stacked up to 3 for NeoTasters */}
+          {/* Name text first */}
+          <span style={{
+            fontFamily:   "var(--font-poppins)",
+            fontSize:     12,
+            color:        "rgba(0,0,0,0.75)",
+            overflow:     "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace:   "nowrap",
+          }}>
+            <span style={{ fontWeight: 600 }}>{firstName}</span>
+            {sp.names.slice(firstName.length)}
+          </span>
+          {/* Avatars second: 1 for Friends, stacked up to 3 for NeoTasters */}
           <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
             {sp.avatars.slice(0, isFriends ? 1 : 3).map((src, i, arr) => (
               <div
@@ -634,17 +646,6 @@ function SocialProofBanner({
               </div>
             ))}
           </div>
-          <span style={{
-            fontFamily:   "var(--font-poppins)",
-            fontSize:     12,
-            color:        "rgba(0,0,0,0.75)",
-            overflow:     "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace:   "nowrap",
-          }}>
-            <span style={{ fontWeight: 600 }}>{firstName}</span>
-            {sp.names.slice(firstName.length)}
-          </span>
         </div>
         <button
           onClick={onViewReviews}
@@ -684,6 +685,7 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
   const [scrollY,             setScrollY]             = useState(0);
   const [activeTab,           setActiveTab]           = useState<TabKey>("overview");
   const [dealsSectionVisible, setDealsSectionVisible] = useState(true);
+  const [pastDeals,           setPastDeals]           = useState(false);
   const [selectedDeal,        setSelectedDeal]        = useState<DealEntry | null>(null);
   const [confirmedBooking,    setConfirmedBooking]    = useState<ConfirmedBooking | null>(null);
 
@@ -741,6 +743,8 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
     const vpTop       = st + FIXED_H;
     const vpBottom    = st + 844;
     setDealsSectionVisible(vpTop < dealsBottom && vpBottom > dealsTop);
+    // Only show sticky CTA after the deals section has fully scrolled past
+    setPastDeals(vpTop >= dealsBottom);
   }, []);
 
   useEffect(() => {
@@ -841,22 +845,16 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
         ref={scrollRef}
         style={{ position: "absolute", inset: 0, overflowY: "auto", overflowX: "hidden" }}
       >
-        {/* 1 ── Hero */}
-        <div style={{ position: "relative", height: HERO_H, flexShrink: 0 }}>
-          <img src={restaurant.imageSrc} alt={restaurant.name} style={{ width: "100%", height: HERO_H, objectFit: "cover", display: "block" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 55%)", pointerEvents: "none" }} />
-        </div>
-
-        {/* 2 ── Restaurant header */}
-        <div style={{ padding: "18px 16px 0" }}>
-          <h1 style={{ fontFamily: "var(--font-poppins)", fontSize: 26, fontWeight: 700, color: "#0A0A0A", lineHeight: 1.2, margin: "0 0 8px" }}>{restaurant.name}</h1>
+        {/* 2 ── Restaurant header — sits below back button overlay */}
+        <div style={{ padding: `${BTN_ROW_H + 12}px 16px 0` }}>
+          <h1 style={{ fontFamily: "var(--font-poppins)", fontSize: 32, fontWeight: 700, color: "#0A0A0A", lineHeight: 1.2, margin: "0 0 8px" }}>{restaurant.name}</h1>
 
           {/* Row 1: star + rating + (count) · cuisines · €€€ */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 4 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <Icon name="star" size={14} color={POSITIVE} />
+              <Icon name="star" size={14} color="#53F293" />
               <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 700, color: "#0A0A0A" }}>{restaurant.rating}</span>
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373" }}>({restaurant.reviewCount})</span>
+              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373", textDecoration: "underline" }}>({restaurant.reviewCount})</span>
             </span>
             <span style={{ color: "#D4D4D4", fontSize: 12 }}>·</span>
             <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373" }}>{restaurant.category}</span>
@@ -867,9 +865,8 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
             </span>
           </div>
 
-          {/* Row 2: clock + Open · Closes at … · district (dist) */}
+          {/* Row 2: Open · Closes at … · district (dist) */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-            <Icon name="clock" size={14} color={POSITIVE} />
             <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: POSITIVE }}>Open</span>
             <span style={{ color: "#D4D4D4", fontSize: 12 }}>·</span>
             <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373" }}>Closes at {detail.closingTime}</span>
@@ -877,8 +874,8 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
             <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373" }}>{detail.neighborhood} ({restaurant.distance})</span>
           </div>
 
-          {/* 3 ── Action row: vertical icon+label, evenly spaced */}
-          <div style={{ display: "flex", justifyContent: "space-around", alignItems: "flex-start", marginBottom: 16 }}>
+          {/* 3 ── Action row: secondary/default/small — horizontal scroll */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto", scrollbarWidth: "none", marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}>
             {[
               { name: "book-open"                  as const, label: "Menu"     },
               { name: "heart"                      as const, label: "Save"     },
@@ -888,13 +885,19 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
               <button
                 key={btn.label}
                 style={{
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                  background: "none", border: "none", cursor: "pointer", padding: "4px 8px",
-                  minWidth: 64,
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  height: 42, borderRadius: 16,
+                  background: "#F5F5F5",
+                  border: "none",
+                  padding: "0 16px",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                  fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A",
+                  whiteSpace: "nowrap",
                 }}
               >
-                <Icon name={btn.name} size={20} color="#0A0A0A" />
-                <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#0A0A0A" }}>{btn.label}</span>
+                <Icon name={btn.name} size={16} color="#0A0A0A" />
+                {btn.label}
               </button>
             ))}
           </div>
@@ -905,14 +908,32 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
           </div>
         </div>
 
-        {/* 5 ── Photo gallery */}
-        <div style={{ paddingLeft: 16, marginBottom: 4 }}>
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none", paddingRight: 16 }}>
-            {detail.galleryImages.map((src, i) => (
-              <div key={i} style={{ flexShrink: 0, width: 130, height: 90, borderRadius: 12, overflow: "hidden" }}>
-                <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              </div>
-            ))}
+        {/* 5 ── Photo gallery — bento: hero as big square, gallery images as pairs of smalls */}
+        <div style={{ overflowX: "auto", scrollbarWidth: "none", marginBottom: 4 }}>
+          <div style={{ display: "flex", gap: 8, width: "max-content", paddingLeft: 16, paddingRight: 16 }}>
+            {/* Hero image: large square (274×274) */}
+            <div style={{ flexShrink: 0, width: 274, height: 274, borderRadius: 12, overflow: "hidden" }}>
+              <img src={restaurant.imageSrc} alt={restaurant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+            {/* Gallery images: pairs as columns of 2 smalls (133×133) */}
+            {Array.from({ length: Math.ceil(detail.galleryImages.length / 2) }).map((_, colIdx) => {
+              const imgA = detail.galleryImages[colIdx * 2];
+              const imgB = detail.galleryImages[colIdx * 2 + 1];
+              return (
+                <div key={colIdx} style={{ display: "flex", flexDirection: "column", gap: 8, flexShrink: 0 }}>
+                  {imgA && (
+                    <div style={{ width: 133, height: 133, borderRadius: 12, overflow: "hidden" }}>
+                      <img src={imgA} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                  )}
+                  {imgB && (
+                    <div style={{ width: 133, height: 133, borderRadius: 12, overflow: "hidden" }}>
+                      <img src={imgB} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -1175,8 +1196,8 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
         <div style={{ height: 100 }} />
       </div>
 
-      {/* ── STICKY BOTTOM CTA — hidden when Deals section is visible ─── */}
-      {!dealsSectionVisible && (
+      {/* ── STICKY BOTTOM CTA — only after deals section scrolled past ─── */}
+      {pastDeals && (
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0,
           background: "rgba(255,255,255,0.97)", backdropFilter: "blur(8px)",
