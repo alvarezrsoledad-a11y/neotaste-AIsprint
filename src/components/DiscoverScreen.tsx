@@ -370,7 +370,7 @@ export function DiscoverScreen() {
               className="w-full text-[15px] font-semibold leading-[20px] text-[#0A0A0A] overflow-hidden text-ellipsis whitespace-nowrap"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              {MAP_PINS[0]?.restaurant.name ?? ""}
+              Browse all deals
             </p>
           </div>
         </div>
