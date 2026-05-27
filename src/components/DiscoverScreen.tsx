@@ -851,6 +851,7 @@ export function DiscoverScreen() {
           justifyContent: "center",
           borderRadius: 296,
           overflow: "hidden",
+          padding: 4,
           // Layer 1: solid white — Figma: linear-gradient(90deg,#FFF,#FFF)
           // This is the critical opaque base; nothing behind it bleeds through.
           background: "#FFFFFF",
