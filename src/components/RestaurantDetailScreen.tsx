@@ -1252,16 +1252,6 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
                 </button>
               </div>
 
-              {/* See all reviews — secondary CTA */}
-              <button style={{
-                width: "100%", padding: 16, borderRadius: 16,
-                background: "#F5F5F5", border: "none",
-                fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, lineHeight: "20px",
-                color: "#0A0A0A", cursor: "pointer", marginTop: 16,
-                textAlign: "center", display: "block",
-              }}>
-                See all reviews
-              </button>
             </>
           ) : (
             /* ── NORMAL REVIEWS ── */
