@@ -667,7 +667,8 @@ function SocialProofBanner({
   if (!sp) return null;
 
   const isFriends = sp.variant === "friends";
-  const bg        = "#fef2f2";
+  // Friends → Strawberry/50, NeoTasters → Green/50
+  const bg        = isFriends ? "#FEF2F2" : "#EEFEF4";
   const firstName = pickFirstName(sp.names);
 
   return (
