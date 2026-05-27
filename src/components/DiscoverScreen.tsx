@@ -753,7 +753,15 @@ export function DiscoverScreen() {
           position: "absolute",
         }}
       >
-        {/* No outer blur — wrapper stays transparent so bottom sheet shows through */}
+        {/* Progressive blur on outer container: 0px at top → 4px at bottom */}
+        <div aria-hidden style={{
+          position: "absolute", inset: 0,
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+          maskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
+          pointerEvents: "none",
+        }} />
 
         {/* Pill — exact Figma layer stack */}
         <div
