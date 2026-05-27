@@ -765,6 +765,9 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
   // Used to measure when title / inline-tabs leave the viewport
   const titleRef       = useRef<HTMLHeadingElement>(null);
   const inlineTabsRef  = useRef<HTMLDivElement>(null);
+  // Mini-map for the About section
+  const aboutMapRef         = useRef<HTMLDivElement>(null);
+  const aboutMapInstanceRef = useRef<import("leaflet").Map | null>(null);
 
   const isHeaderElevated = useScrollElevation(scrollRef);
 
@@ -793,6 +796,72 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── About mini-map (CartoDB light + green "N" pin, non-interactive) ──────────
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let cancelled = false;
+
+    import("leaflet").then((L) => {
+      if (cancelled || !aboutMapRef.current) return;
+
+      // Tear down any previous instance (pin changed)
+      if (aboutMapInstanceRef.current) {
+        aboutMapInstanceRef.current.remove();
+        aboutMapInstanceRef.current = null;
+      }
+
+      const el = aboutMapRef.current!;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((el as any)._leaflet_id) (el as any)._leaflet_id = undefined;
+
+      const map = L.map(el, {
+        center:             [pin.lat, pin.lng],
+        zoom:               15,
+        zoomControl:        false,
+        scrollWheelZoom:    false,
+        doubleClickZoom:    false,
+        dragging:           false,
+        touchZoom:          false,
+        keyboard:           false,
+        attributionControl: false,
+      });
+
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        subdomains: "abcd",
+        maxZoom:    19,
+      }).addTo(map);
+
+      // Green "N" default pin — same SVG as MapPin/SvgDefaultDefault
+      const pinHtml = [
+        '<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">',
+        '<path opacity="0.1" d="M32 16.0568C32 21.5455 12 32 12 32C12 32 9 21.5455 9 16.0568C9 14.1852 10.2116 12.3903 12.3683 11.0669C14.5249 9.74348 17.45 9 20.5 9C23.55 9 26.4751 9.74348 28.6317 11.0669C30.7884 12.3903 32 14.1852 32 16.0568Z" fill="#1C1D28"/>',
+        '<path fill-rule="evenodd" clip-rule="evenodd" d="M0 12V12.5853C0 15.4431 0.972602 18.2158 2.75783 20.4473L12 32L21.2422 20.4473C23.0274 18.2158 24 15.4431 24 12.5853V12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12Z" fill="#53F293"/>',
+        '<path d="M12 0.5C18.3513 0.5 23.5 5.64873 23.5 12V12.585C23.5 15.3292 22.5659 17.9919 20.8516 20.1348L12 31.1992L3.14844 20.1348C1.43414 17.9919 0.5 15.3292 0.5 12.585V12C0.5 5.64873 5.64873 0.5 12 0.5Z" stroke="#1C1D28" stroke-opacity="0.1"/>',
+        '<path fill-rule="evenodd" clip-rule="evenodd" d="M17.4429 17.0429C17.7644 16.9861 18 16.6914 18 16.3462V5.35327C18 5.13502 17.8151 4.96901 17.6119 5.00489L14.2785 5.59353C14.1178 5.62191 14 5.76925 14 5.9419V11.6468L10.2443 6.6727C10.0935 6.47288 9.8524 6.37514 9.6142 6.41721L6.56039 6.95648L6.55707 6.95707C6.23561 7.01384 6 7.30852 6 7.65382V18.6467C6 18.865 6.18495 19.031 6.38813 18.9951L9.72147 18.4064C9.8822 18.3781 10 18.2307 10 18.058V12.3532L13.7557 17.3273C13.9065 17.5271 14.1476 17.6248 14.3858 17.5828L14.3881 17.5824L17.4396 17.0435L17.4429 17.0429Z" fill="#1C1D28"/>',
+        '</svg>',
+      ].join("");
+
+      const icon = L.divIcon({
+        html:       pinHtml,
+        iconSize:   [32, 32],
+        iconAnchor: [12, 32],
+        className:  "",
+      });
+
+      L.marker([pin.lat, pin.lng], { icon }).addTo(map);
+
+      aboutMapInstanceRef.current = map;
+    });
+
+    return () => {
+      cancelled = true;
+      if (aboutMapInstanceRef.current) {
+        aboutMapInstanceRef.current.remove();
+        aboutMapInstanceRef.current = null;
+      }
+    };
+  }, [pin.lat, pin.lng]);
 
   // Legacy alias kept so derived vars below (headerShadow, etc.) still compile
   const pastHero = pastTabs;
@@ -1280,67 +1349,87 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
 
         {/* ───── ABOUT ───── */}
         <div ref={aboutRef} style={{ padding: "24px 16px 0", scrollMarginTop: FIXED_H }}>
-          <h2 style={{ fontFamily: "var(--font-poppins)", fontSize: 18, fontWeight: 700, color: "#0A0A0A", margin: "0 0 12px" }}>About</h2>
+          <h2 style={{ fontFamily: "var(--font-poppins)", fontSize: 20, fontWeight: 700, color: "#0A0A0A", margin: "0 0 16px" }}>About</h2>
 
-          <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#525252", lineHeight: 1.65, margin: "0 0 16px" }}>{detail.about}</p>
-
-          {/* Map preview */}
-          <div style={{ borderRadius: 16, overflow: "hidden", height: 180, marginBottom: 12, border: "1px solid rgba(0,0,0,0.08)" }}>
-            <iframe
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${pin.lng - 0.007},${pin.lat - 0.004},${pin.lng + 0.007},${pin.lat + 0.004}&layer=mapnik&marker=${pin.lat},${pin.lng}`}
-              style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-              title={`Map showing ${restaurant.name}`}
-              loading="lazy"
-            />
+          {/* Mini-map — CartoDB light, non-interactive, green "N" pin */}
+          <div style={{ borderRadius: 16, overflow: "hidden", height: 185, marginBottom: 12 }}>
+            <div ref={aboutMapRef} style={{ width: "100%", height: "100%" }} />
           </div>
 
-          {/* Get directions + Call — outlined side by side */}
+          {/* Get directions + Call */}
           <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
             <button style={{
-              flex: 1, height: 44, borderRadius: 12,
+              flex: 1,
+              borderRadius: 16,
               background: "#FEFEFE", color: "#0A0A0A",
-              border: "1px solid rgba(0,0,0,0.12)",
+              border: "2px solid rgba(0,0,0,0.05)",
               fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              padding: "12px 16px",
             }}>
               <Icon name="location" size={20} color="#0A0A0A" />
               Get directions
             </button>
             <button style={{
-              flex: 1, height: 44, borderRadius: 12,
+              flex: 1,
+              borderRadius: 16,
               background: "#FEFEFE", color: "#0A0A0A",
-              border: "1px solid rgba(0,0,0,0.12)",
+              border: "2px solid rgba(0,0,0,0.05)",
               fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              padding: "12px 16px",
             }}>
-              <Icon name="phone" size={20} color="#0A0A0A" />
+              <Icon name="phone" size={16} color="#0A0A0A" />
               Call
             </button>
           </div>
 
           {/* Address row */}
           <div style={{
-            display: "flex", alignItems: "center", gap: 12,
-            paddingTop: 16, borderTop: "1px solid rgba(0,0,0,0.08)",
+            display: "flex", alignItems: "center", gap: 16,
+            minHeight: 64, paddingTop: 16, paddingBottom: 16,
+            borderBottom: "1px solid rgba(0,0,0,0.05)",
           }}>
-            <Icon name="location" size={16} color="#0A0A0A" />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 500, color: "#0A0A0A", margin: 0, lineHeight: 1.4 }}>{detail.address}</p>
-              <p style={{ fontFamily: "var(--font-poppins)", fontSize: 12, color: "#737373", margin: 0 }}>{detail.neighborhood} · {restaurant.distance} away</p>
+            {/* Icon container */}
+            <div style={{
+              width: 32, height: 32, flexShrink: 0,
+              background: "#F5F5F5", borderRadius: 8,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Icon name="signpost" size={16} color="#0A0A0A" />
             </div>
+            {/* Text */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 500, color: "#0A0A0A", margin: 0, lineHeight: "20px" }}>{detail.address}</p>
+              <p style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 400, color: "#737373", margin: 0, lineHeight: "18px" }}>{detail.neighborhood} · {restaurant.distance} away</p>
+            </div>
+            {/* Copy */}
+            <Icon name="files" size={16} color="#737373" />
           </div>
 
           {/* Hours row */}
           <div style={{
-            display: "flex", alignItems: "center", gap: 12,
-            paddingTop: 14, paddingBottom: 14, borderTop: "1px solid rgba(0,0,0,0.08)", marginTop: 14,
+            display: "flex", alignItems: "center", gap: 16,
+            minHeight: 64, paddingTop: 16, paddingBottom: 16,
+            borderBottom: "1px solid rgba(0,0,0,0.05)",
           }}>
-            <Icon name="clock" size={16} color={POSITIVE} />
-            <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: POSITIVE }}>Open</span>
-              <span style={{ color: "#D4D4D4", fontSize: 12 }}>·</span>
+            {/* Icon container */}
+            <div style={{
+              width: 32, height: 32, flexShrink: 0,
+              background: "#F5F5F5", borderRadius: 8,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Icon name="clock" size={16} color="#0A0A0A" />
+            </div>
+            {/* Text */}
+            <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 500, color: "#0A0A0A" }}>Open</span>
+              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373" }}>·</span>
               <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373" }}>Closes at {detail.closingTime}</span>
             </div>
+            {/* Expand */}
             <button
               aria-label="Expand hours"
               style={{ background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 4 }}

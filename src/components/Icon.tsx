@@ -106,6 +106,26 @@ const ICONS = {
       </>
     ),
   },
+
+  // ── 16px additions ──────────────────────────────────────────────────────
+  signpost: {
+    viewBox: "0 0 16 16",
+    body: (
+      <>
+        <path d="M10 0H6V2H1V9H13.5L16 5.5L13.5 2H10V0Z" />
+        <path d="M6 11H10V16H6V11Z" />
+      </>
+    ),
+  },
+  files: {
+    viewBox: "0 0 16 16",
+    body: (
+      <>
+        <path fillRule="evenodd" clipRule="evenodd" d="M15 4L11 0H4.5V12.5H15V4ZM10.3787 1.5L13.5 4.62132V11H6V1.5H10.3787Z" />
+        <path d="M1 4V16H11V14.5H2.5V4H1Z" />
+      </>
+    ),
+  },
 } satisfies Record<string, IconDef>;
 
 export type IconName = keyof typeof ICONS;
