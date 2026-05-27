@@ -54,11 +54,11 @@ const FILTER_CHIPS = [
 ];
 
 const TABS = [
-  { label: "Home",     icon: "🏠",  active: false },
-  { label: "Friends",  icon: "👥",  active: false },
-  { label: "Discover", icon: "📍",  active: true  },
-  { label: "Bookings", icon: "✓",   active: false },
-  { label: "Profile",  icon: "👤",  active: false },
+  { label: "Home",     icon: "home",         active: false },
+  { label: "Friends",  icon: "users",        active: false },
+  { label: "Discover", icon: "map-pin",      active: true  },
+  { label: "Bookings", icon: "check-square", active: false },
+  { label: "Profile",  icon: "user",         active: false },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -739,41 +739,92 @@ export function DiscoverScreen() {
 
       {/* ── TAB BAR ───────────────────────────────────────────────────── */}
       <div
-        className="absolute bottom-0 left-0 right-0 z-40 flex items-start justify-around px-4 pt-3"
+        className="absolute bottom-0 left-0 right-0 z-40"
         style={{
-          background: "rgba(255,255,255,0.95)",
-          backdropFilter: "blur(8px)",
-          borderTop: "1px solid rgba(0,0,0,0.08)",
-          paddingBottom: "max(24px, env(safe-area-inset-bottom))",
+          background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.03) 100%)",
+          backdropFilter: "blur(2px)",
+          paddingTop: 16,
+          paddingBottom: "max(25px, env(safe-area-inset-bottom))",
+          paddingLeft: 25,
+          paddingRight: 25,
         }}
       >
-        {TABS.map((tab) => (
-          <button
-            key={tab.label}
-            className="flex flex-col items-center gap-0.5 relative px-2 py-1"
-            onClick={() => {
-              // Tapping any tab deselects pins and collapses sheet
-              if (tab.label === "Discover") {
-                setSelectedPinId(null);
-                setSheetMode("peek");
-              }
-            }}
-          >
-            {tab.active && (
-              <div className="absolute inset-0 rounded-full" style={{ background: "rgba(0,0,0,0.05)" }} />
-            )}
-            <span className="text-[22px] relative z-10 leading-none">{tab.icon}</span>
-            <span
-              className="text-[12px] font-semibold leading-4 relative z-10"
+        {/* Inner pill */}
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "center",
+            borderRadius: 296,
+            background: "rgba(255,255,255,0.92)",
+            backdropFilter: "blur(20px)",
+            boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+          }}
+        >
+          {TABS.map((tab) => (
+            <button
+              key={tab.label}
+              onClick={() => {
+                if (tab.label === "Discover") {
+                  setSelectedPinId(null);
+                  setSheetMode("peek");
+                }
+              }}
               style={{
-                color: tab.active ? "#53F293" : "#737373",
-                fontFamily: "var(--font-poppins)",
+                flex: "1 0 0",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1,
+                position: "relative",
+                padding: "6px 8px 7px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                opacity: tab.active ? 1 : 0.5,
               }}
             >
-              {tab.label}
-            </span>
-          </button>
-        ))}
+              {/* Active selection pill */}
+              {tab.active && (
+                <div style={{
+                  position: "absolute",
+                  inset: 0,
+                  margin: "0 auto",
+                  width: 72,
+                  borderRadius: 100,
+                  background: "rgba(0,0,0,0.05)",
+                }} />
+              )}
+              {/* Icon */}
+              <div style={{ height: 28, display: "flex", alignItems: "center", justifyContent: "center", width: "100%", position: "relative", zIndex: 1 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/assets/icons/tab-bar/${tab.icon}.svg`}
+                  alt=""
+                  width={24}
+                  height={24}
+                  style={{ display: "block" }}
+                />
+              </div>
+              {/* Label */}
+              <span style={{
+                fontFamily: "var(--font-poppins)",
+                fontSize: 10,
+                fontWeight: 500,
+                lineHeight: "12px",
+                color: "#0A0A0A",
+                textAlign: "center",
+                width: "100%",
+                position: "relative",
+                zIndex: 1,
+              }}>
+                {tab.label}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
