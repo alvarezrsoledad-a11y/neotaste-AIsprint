@@ -420,7 +420,8 @@ export function DiscoverScreen() {
           }}
           aria-label="My location"
         >
-          ➤
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/icons/20px/map-pin.svg" width={20} height={20} alt="" />
         </button>
       )}
 
@@ -441,7 +442,8 @@ export function DiscoverScreen() {
               fontWeight: 600,
             }}
           >
-            <span>☰</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/icons/20px/list.svg" width={20} height={20} alt="" style={{ filter: "brightness(0) invert(1)" }} />
             <span>List view</span>
           </button>
         </div>
@@ -786,8 +788,9 @@ export function DiscoverScreen() {
               fontWeight: 600,
             }}
           >
-            <span>🗺️</span>
-            <span>Map</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/icons/20px/map.svg" width={20} height={20} alt="" style={{ filter: "brightness(0) invert(1)" }} />
+            <span>Map view</span>
           </button>
         </div>
       </div>
