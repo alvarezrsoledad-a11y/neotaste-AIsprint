@@ -738,12 +738,11 @@ export function DiscoverScreen() {
       />
 
       {/* ── TAB BAR ───────────────────────────────────────────────────── */}
-      {/* Outer wrapper: transparent gradient + 2px ambient blur */}
+      {/* Outer wrapper: linear gradient bg (rgba(0,0,0,0) → rgba(0,0,0,0.03)) */}
       <div
         className="absolute bottom-0 left-0 right-0 z-40"
         style={{
           background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.03) 100%)",
-          backdropFilter: "blur(2px)",
           paddingTop: 16,
           paddingBottom: "max(25px, env(safe-area-inset-bottom))",
           paddingLeft: 25,
@@ -751,9 +750,21 @@ export function DiscoverScreen() {
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
+          position: "absolute",
         }}
       >
-        {/* Pill — layered glass effect matching Figma BG spec */}
+        {/* Progressive blur layer: 0→4px blur from Y 0%→100% (Figma spec).
+            A masked backdrop-filter div approximates this in CSS. */}
+        <div aria-hidden style={{
+          position: "absolute", inset: 0,
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+          maskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Pill — exact Figma layer stack */}
         <div
           style={{
             flex: "1 0 0",
@@ -763,24 +774,38 @@ export function DiscoverScreen() {
             justifyContent: "center",
             borderRadius: 296,
             overflow: "hidden",
-            /* hard-light blur layer → frosted glass tint */
-            backdropFilter: "blur(20px)",
-            /* white fill via color-dodge equivalent */
-            background: "rgba(255,255,255,0.88)",
-            /* outer glow matching the Figma blur halo */
-            filter: "drop-shadow(0 0 8px rgba(0,0,0,0.08))",
           }}
         >
-          {/* color-dodge tint layer (Figma: bg-[#333] mix-blend-color-dodge) */}
+          {/* Backdrop blur for pill content */}
           <div aria-hidden style={{
-            position: "absolute", inset: 0, borderRadius: 296,
-            background: "#333",
+            position: "absolute", inset: 0,
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            pointerEvents: "none",
+          }} />
+          {/* Layer 1 (bottom): rgba(255,255,255,0.5) base fill */}
+          <div aria-hidden style={{
+            position: "absolute", inset: 0,
+            background: "rgba(255,255,255,0.5)",
+            pointerEvents: "none",
+          }} />
+          {/* Layer 2: #FFFFFF · plus-darker (CSS: lighten as closest approx) */}
+          <div aria-hidden style={{
+            position: "absolute", inset: 0,
+            background: "#FFFFFF",
+            mixBlendMode: "lighten",
+            pointerEvents: "none",
+          }} />
+          {/* Layer 3: #333333 · color-dodge */}
+          <div aria-hidden style={{
+            position: "absolute", inset: 0,
+            background: "#333333",
             mixBlendMode: "color-dodge",
             pointerEvents: "none",
           }} />
-          {/* hard-light noise layer (Figma: bg-[rgba(0,0,0,0.04)] mix-blend-hard-light) */}
+          {/* Layer 4 (top): rgba(0,0,0,0.04) · hard-light */}
           <div aria-hidden style={{
-            position: "absolute", inset: 0, borderRadius: 296,
+            position: "absolute", inset: 0,
             background: "rgba(0,0,0,0.04)",
             mixBlendMode: "hard-light",
             pointerEvents: "none",
