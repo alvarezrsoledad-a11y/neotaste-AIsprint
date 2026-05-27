@@ -30,7 +30,7 @@ interface Props {
 }
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
-function StarRow({ count, size = 14 }: { count: number; size?: number }) {
+function StarRow({ count, size = 14, color = "#53F293" }: { count: number; size?: number; color?: string }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
       {Array.from({ length: 5 }).map((_, i) => (
@@ -38,7 +38,7 @@ function StarRow({ count, size = 14 }: { count: number; size?: number }) {
           key={i}
           name="star"
           size={size}
-          color={i < count ? POSITIVE : "rgba(0,0,0,0.15)"}
+          color={i < count ? color : "rgba(0,0,0,0.15)"}
         />
       ))}
     </span>
@@ -470,10 +470,37 @@ export function BookingConfirmationScreen({ booking, onDone }: { booking: Confir
 }
 
 // ── Review card ───────────────────────────────────────────────────────────────
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review, isLast }: { review: Review; isLast?: boolean }) {
   const level = levelForReviewer(review.name);
+  const [liked, setLiked] = useState(false);
+  const [hearts, setHearts] = useState<{ id: number; x: number }[]>([]);
+  const heartIdRef = useRef(0);
+
+  const handleHeart = () => {
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    if (!wasLiked) {
+      const newHearts = Array.from({ length: 3 }, (_, i) => ({
+        id: heartIdRef.current++,
+        x: (i - 1) * 14,
+      }));
+      setHearts(prev => [...prev, ...newHearts]);
+      setTimeout(() => {
+        const ids = new Set(newHearts.map(h => h.id));
+        setHearts(prev => prev.filter(h => !ids.has(h.id)));
+      }, 900);
+    }
+  };
+
+  const likeCount = (review.likes ?? 0) + (liked ? 1 : 0);
+
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{
+      paddingBottom: 16,
+      marginBottom: isLast ? 0 : 16,
+      borderBottom: isLast ? "none" : "1px solid rgba(0,0,0,0.1)",
+    }}>
+      {/* Avatar + name + badge */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
         {review.avatarSrc
           ? <img src={review.avatarSrc} alt={review.name} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
@@ -481,29 +508,70 @@ function ReviewCard({ review }: { review: Review }) {
               <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 700, color: "#0A0A0A" }}>{review.initials}</span>
             </div>
         }
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A" }}>{review.name}</span>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 700, lineHeight: "20px", letterSpacing: "0.25px", color: "#0A0A0A" }}>{review.name}</span>
           <LevelBadge level={level} />
         </div>
       </div>
+
+      {/* Stars + date */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-        <StarRow count={review.stars} size={14} />
+        <StarRow count={review.stars} size={12} />
         <span style={{ width: 3, height: 3, borderRadius: "50%", background: "#D4D4D4", display: "inline-block" }} />
-        <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, color: "#737373" }}>{review.timeAgo}</span>
+        <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, lineHeight: "18px", color: "rgba(0,0,0,0.7)" }}>{review.timeAgo}</span>
       </div>
-      <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#0A0A0A", lineHeight: 1.6, margin: "0 0 10px" }}>{review.text}</p>
-      {review.photos && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 10, overflowX: "auto", scrollbarWidth: "none" }}>
-          {review.photos.map((src, i) => (
-            <div key={i} style={{ flex: "1 1 0", minWidth: 160, height: 160, borderRadius: 12, overflow: "hidden" }}>
-              <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+
+      {/* Review text */}
+      <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 500, lineHeight: "20px", color: "#0A0A0A", margin: "0 0 12px" }}>{review.text}</p>
+
+      {/* Review images — bento layout */}
+      {review.photos && review.photos.length > 0 && (
+        review.photos.length <= 2 ? (
+          <div style={{ display: "flex", gap: 8, marginBottom: 12, height: 248 }}>
+            <div style={{ width: 175, flexShrink: 0, borderRadius: 12, overflow: "hidden" }}>
+              <img src={review.photos[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
-          ))}
-        </div>
+            {review.photos[1] && (
+              <div style={{ flex: 1, borderRadius: 12, overflow: "hidden" }}>
+                <img src={review.photos[1]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 8, marginBottom: 12, height: 248, overflowX: "auto", scrollbarWidth: "none" }}>
+            {review.photos.map((src, i) => (
+              <div key={i} style={{ width: i === 0 ? 175 : 160, flexShrink: 0, borderRadius: 12, overflow: "hidden" }}>
+                <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+            ))}
+          </div>
+        )
       )}
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <Icon name="heart-1" size={16} color="#0A0A0A" />
-        <span style={{ fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 500, color: "#737373" }}>{review.likes}</span>
+
+      {/* Heart — tappable with floating heart animation */}
+      <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <button
+          onClick={handleHeart}
+          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}
+        >
+          <Icon name={liked ? "heart" : "heart-1"} size={16} color={liked ? "#FF4040" : "#0A0A0A"} />
+        </button>
+        <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 600, color: "#0A0A0A" }}>{likeCount}</span>
+        {hearts.map(h => (
+          <div
+            key={h.id}
+            style={{
+              position: "absolute",
+              bottom: 20,
+              left: 0,
+              transform: `translateX(${h.x}px)`,
+              animation: "floatHeart 0.8s ease-out forwards",
+              pointerEvents: "none",
+            }}
+          >
+            <Icon name="heart" size={12} color="#FF4040" />
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -807,6 +875,12 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
 
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#fff", zIndex: 50 }}>
+      <style>{`
+        @keyframes floatHeart {
+          0%   { transform: translateY(0)     scale(1);   opacity: 1; }
+          100% { transform: translateY(-48px) scale(1.3); opacity: 0; }
+        }
+      `}</style>
 
       {/* ── FIXED OVERLAY: nav bar ────────────────────────────────────── */}
       {/* State 0 → transparent, back pill only                           */}
@@ -1067,15 +1141,15 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
 
         {/* ───── RATINGS & REVIEWS ───── */}
         <div ref={reviewsRef} style={{ padding: "24px 16px 0", scrollMarginTop: FIXED_H }}>
-          <h2 style={{ fontFamily: "var(--font-poppins)", fontSize: 18, fontWeight: 700, color: "#0A0A0A", margin: "0 0 16px" }}>Ratings &amp; Reviews</h2>
+          <h2 style={{ fontFamily: "var(--font-poppins)", fontSize: 20, fontWeight: 700, lineHeight: "26px", color: "#0A0A0A", margin: "0 0 16px" }}>Ratings &amp; Reviews</h2>
 
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-            <span style={{ fontFamily: "var(--font-poppins)", fontSize: 52, fontWeight: 700, color: "#0A0A0A", lineHeight: 1 }}>{restaurant.rating}</span>
-            <div>
-              <StarRow count={5} size={16} />
-              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, color: "#737373", display: "block", marginTop: 4 }}>
+            <span style={{ fontFamily: "var(--font-poppins)", fontSize: 44, fontWeight: 700, lineHeight: "52px", letterSpacing: "-0.3px", color: "#0A0A0A" }}>{restaurant.rating}</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "#737373" }}>
                 {detail.totalReviews.toLocaleString("de-DE")} Ratings &amp; Reviews
               </span>
+              <StarRow count={5} size={24} />
             </div>
           </div>
 
@@ -1084,11 +1158,11 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
             <button
               onClick={() => setReviewFilter("friends")}
               style={{
-                display: "flex", alignItems: "center", gap: 4, padding: "7px 14px",
-                borderRadius: 20, fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none",
-                background: reviewFilter === "friends" ? "#0A0A0A" : "transparent",
-                color: reviewFilter === "friends" ? "#FEFEFE" : "#737373",
-                outline: reviewFilter === "friends" ? "none" : "1px solid rgba(0,0,0,0.15)",
+                display: "flex", alignItems: "center", gap: 4, padding: "8px 12px",
+                borderRadius: 32, fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                background: "transparent",
+                color: reviewFilter === "friends" ? "#11301D" : "#737373",
+                border: reviewFilter === "friends" ? "2px solid #11301D" : "1px solid rgba(0,0,0,0.1)",
               }}
             >
               Friends ({friendReviews.length})
@@ -1096,30 +1170,30 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
             <button
               onClick={() => setReviewFilter("neotasters")}
               style={{
-                display: "flex", alignItems: "center", gap: 4, padding: "7px 14px",
-                borderRadius: 20, fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none",
-                background: reviewFilter === "neotasters" ? "#0A0A0A" : "transparent",
-                color: reviewFilter === "neotasters" ? "#FEFEFE" : "#737373",
-                outline: reviewFilter === "neotasters" ? "none" : "1px solid rgba(0,0,0,0.15)",
+                display: "flex", alignItems: "center", gap: 4, padding: "8px 12px",
+                borderRadius: 32, fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                background: "transparent",
+                color: reviewFilter === "neotasters" ? "#11301D" : "#737373",
+                border: reviewFilter === "neotasters" ? "2px solid #11301D" : "1px solid rgba(0,0,0,0.1)",
               }}
             >
               NeoTasters
             </button>
           </div>
 
-          <div style={{ height: 1, background: "rgba(0,0,0,0.08)", marginBottom: 20 }} />
-
-          {displayedReviews.map((review, i) => <ReviewCard key={i} review={review} />)}
+          {displayedReviews.map((review, i) => (
+            <ReviewCard key={i} review={review} isLast={i === displayedReviews.length - 1} />
+          ))}
 
           {showSeeAll && (
             <button style={{
-              width: "100%", height: 44, borderRadius: 12,
-              background: "transparent", border: "none",
-              fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600,
-              color: "#0A0A0A", cursor: "pointer", marginBottom: 8,
-              textDecoration: "underline",
+              width: "100%", padding: 16, borderRadius: 16,
+              background: "#F5F5F5", border: "none",
+              fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, lineHeight: "20px",
+              color: "#0A0A0A", cursor: "pointer", marginTop: 8,
+              textAlign: "center", display: "block",
             }}>
-              See all reviews
+              See all ratings &amp; reviews
             </button>
           )}
         </div>
