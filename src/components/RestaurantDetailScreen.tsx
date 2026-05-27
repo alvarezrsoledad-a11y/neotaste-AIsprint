@@ -590,8 +590,10 @@ function SimilarCard({ pin, onOpen }: { pin: MapPin; onOpen: () => void }) {
       onClick={onOpen}
       style={{ display: "flex", flexDirection: "column", gap: 8, width: 248, flexShrink: 0, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
     >
-      <div style={{ position: "relative", width: 248, height: 138, borderRadius: 16, overflow: "hidden" }}>
+      {/* Image */}
+      <div style={{ position: "relative", width: 248, height: 138, borderRadius: 16, overflow: "hidden", flexShrink: 0 }}>
         <img src={restaurant.imageSrc} alt={restaurant.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        {/* Trust tag — top-left overlay */}
         {restaurant.trustTag && (
           <div
             style={{
@@ -605,6 +607,7 @@ function SimilarCard({ pin, onOpen }: { pin: MapPin; onOpen: () => void }) {
             {restaurant.trustTag.label}
           </div>
         )}
+        {/* Social proof — bottom-left overlay */}
         {(pin.type === "community" || pin.type === "friends") && restaurant.friendsCount && (
           <div
             style={{
@@ -618,21 +621,29 @@ function SimilarCard({ pin, onOpen }: { pin: MapPin; onOpen: () => void }) {
           </div>
         )}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4, width: 248 }}>
+
+      {/* Info */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {/* Name */}
         <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 700, color: "#1C1D28", margin: 0, lineHeight: "20px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {restaurant.name}
         </p>
+
+        {/* ⭐ rating · distance · cuisines */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-            <Icon name="star" size={12} color={POSITIVE} />
-            <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "rgba(28,29,40,0.6)" }}>{restaurant.rating}</span>
-            <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "rgba(28,29,40,0.6)" }}>({restaurant.reviewCount})</span>
+          {/* Star + rating + count — tight group */}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+            <Icon name="star" size={12} color="#737373" />
+            <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373" }}>{restaurant.rating}</span>
+            <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373" }}>({restaurant.reviewCount})</span>
           </div>
-          <div style={{ width: 1, height: 12, background: "rgba(28,29,40,0.2)" }} />
-          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "rgba(28,29,40,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{restaurant.distance}</span>
-          <div style={{ width: 1, height: 12, background: "rgba(28,29,40,0.2)" }} />
-          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "rgba(28,29,40,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{restaurant.category}</span>
+          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", flexShrink: 0 }}>·</span>
+          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{restaurant.distance}</span>
+          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", flexShrink: 0 }}>·</span>
+          <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{restaurant.category}</span>
         </div>
+
+        {/* Deal chips */}
         {restaurant.deals.length > 0 && (
           <div style={{ display: "flex", gap: 4, flexWrap: "nowrap", overflow: "hidden" }}>
             {restaurant.deals.map((deal, i) => (
@@ -1444,7 +1455,7 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
         {/* ───── SIMILAR RESTAURANTS ───── */}
         <div ref={similarRef} style={{ padding: "24px 0 0", scrollMarginTop: FIXED_H }}>
           <div style={{ paddingLeft: 16, paddingRight: 16, marginBottom: 16 }}>
-            <h2 style={{ fontFamily: "var(--font-poppins)", fontSize: 18, fontWeight: 700, color: "#0A0A0A", margin: 0 }}>Similar Restaurants</h2>
+            <h2 style={{ fontFamily: "var(--font-poppins)", fontSize: 18, fontWeight: 700, color: "#0A0A0A", margin: 0 }}>Similar restaurants</h2>
           </div>
           <div style={{ display: "flex", gap: 12, overflowX: "auto", scrollbarWidth: "none", paddingLeft: 16, paddingRight: 16, paddingBottom: 4 }}>
             {similarPins.map(simPin => (
