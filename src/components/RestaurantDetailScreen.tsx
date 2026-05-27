@@ -1193,12 +1193,36 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
             <>
               {/* Content block: avatars + copy + Find friends CTA */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 32, padding: "64px 0", width: "100%" }}>
-                {/* Avatars illustration */}
-                <img
-                  src="/assets/illustrations/avatars.svg"
-                  alt=""
-                  style={{ width: 236, height: 68, flexShrink: 0 }}
-                />
+                {/* Avatars — shape SVG + overlaid emojis (Display/Medium: 44px) */}
+                <div style={{ position: "relative", width: 236, height: 68, flexShrink: 0 }}>
+                  <img
+                    src="/assets/illustrations/avatars-shape.svg"
+                    alt=""
+                    style={{ width: 236, height: 68, display: "block" }}
+                  />
+                  {([
+                    { emoji: "👩🏻‍🦰", cx: 34  },
+                    { emoji: "👱🏻‍♂️",  cx: 90  },
+                    { emoji: "👩🏾‍🦱", cx: 146 },
+                    { emoji: "👱🏻‍♀️", cx: 202 },
+                  ] as { emoji: string; cx: number }[]).map(({ emoji, cx }) => (
+                    <span
+                      key={cx}
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: cx,
+                        transform: "translate(-50%, -50%)",
+                        fontSize: 44,
+                        lineHeight: 1,
+                        pointerEvents: "none",
+                        userSelect: "none",
+                      }}
+                    >
+                      {emoji}
+                    </span>
+                  ))}
+                </div>
 
                 {/* Copy */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center", textAlign: "center" }}>
