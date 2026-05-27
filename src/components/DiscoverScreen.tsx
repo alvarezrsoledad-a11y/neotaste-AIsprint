@@ -738,6 +738,7 @@ export function DiscoverScreen() {
       />
 
       {/* ── TAB BAR ───────────────────────────────────────────────────── */}
+      {/* Outer wrapper: transparent gradient + 2px ambient blur */}
       <div
         className="absolute bottom-0 left-0 right-0 z-40"
         style={{
@@ -747,22 +748,45 @@ export function DiscoverScreen() {
           paddingBottom: "max(25px, env(safe-area-inset-bottom))",
           paddingLeft: 25,
           paddingRight: 25,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "center",
         }}
       >
-        {/* Inner pill */}
+        {/* Pill — layered glass effect matching Figma BG spec */}
         <div
           style={{
+            flex: "1 0 0",
             position: "relative",
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "center",
             borderRadius: 296,
-            background: "rgba(255,255,255,0.92)",
+            overflow: "hidden",
+            /* hard-light blur layer → frosted glass tint */
             backdropFilter: "blur(20px)",
-            boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+            /* white fill via color-dodge equivalent */
+            background: "rgba(255,255,255,0.88)",
+            /* outer glow matching the Figma blur halo */
+            filter: "drop-shadow(0 0 8px rgba(0,0,0,0.08))",
           }}
         >
-          {TABS.map((tab) => (
+          {/* color-dodge tint layer (Figma: bg-[#333] mix-blend-color-dodge) */}
+          <div aria-hidden style={{
+            position: "absolute", inset: 0, borderRadius: 296,
+            background: "#333",
+            mixBlendMode: "color-dodge",
+            pointerEvents: "none",
+          }} />
+          {/* hard-light noise layer (Figma: bg-[rgba(0,0,0,0.04)] mix-blend-hard-light) */}
+          <div aria-hidden style={{
+            position: "absolute", inset: 0, borderRadius: 296,
+            background: "rgba(0,0,0,0.04)",
+            mixBlendMode: "hard-light",
+            pointerEvents: "none",
+          }} />
+
+          {TABS.map((tab, i) => (
             <button
               key={tab.label}
               onClick={() => {
@@ -773,6 +797,7 @@ export function DiscoverScreen() {
               }}
               style={{
                 flex: "1 0 0",
+                minWidth: 0,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -780,32 +805,47 @@ export function DiscoverScreen() {
                 gap: 1,
                 position: "relative",
                 padding: "6px 8px 7px",
+                /* tabs 1–4 overlap by -5.5px per Figma */
+                marginRight: i < TABS.length - 1 ? -5.5 : 0,
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 opacity: tab.active ? 1 : 0.5,
+                zIndex: tab.active ? 2 : 1,
               }}
             >
-              {/* Active selection pill */}
+              {/* Active selection pill: absolutely centered, full height */}
               {tab.active && (
                 <div style={{
                   position: "absolute",
-                  inset: 0,
-                  margin: "0 auto",
-                  width: 72,
+                  top: 0,
+                  bottom: 0,
+                  left: "calc(50% + 0.2px)",
+                  transform: "translateX(-50%)",
+                  width: 72.4,
                   borderRadius: 100,
                   background: "rgba(0,0,0,0.05)",
+                  zIndex: 0,
                 }} />
               )}
-              {/* Icon */}
-              <div style={{ height: 28, display: "flex", alignItems: "center", justifyContent: "center", width: "100%", position: "relative", zIndex: 1 }}>
+              {/* Icon container: 28px tall, 24×24 icon centered */}
+              <div style={{
+                height: 28,
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                zIndex: 1,
+                flexShrink: 0,
+              }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/assets/icons/tab-bar/${tab.icon}.svg`}
                   alt=""
                   width={24}
                   height={24}
-                  style={{ display: "block" }}
+                  style={{ display: "block", flexShrink: 0 }}
                 />
               </div>
               {/* Label */}
@@ -819,6 +859,7 @@ export function DiscoverScreen() {
                 width: "100%",
                 position: "relative",
                 zIndex: 1,
+                flexShrink: 0,
               }}>
                 {tab.label}
               </span>
