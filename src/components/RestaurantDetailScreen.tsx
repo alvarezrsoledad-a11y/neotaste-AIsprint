@@ -584,7 +584,6 @@ function ReviewCard({ review, isLast }: { review: Review; isLast?: boolean }) {
 // ── Similar restaurant card ───────────────────────────────────────────────────
 function SimilarCard({ pin, onOpen }: { pin: MapPin; onOpen: () => void }) {
   const { restaurant } = pin;
-  const hasFriendTag = pin.type === "friends" && restaurant.trustTag;
   return (
     <button
       onClick={onOpen}
@@ -593,31 +592,35 @@ function SimilarCard({ pin, onOpen }: { pin: MapPin; onOpen: () => void }) {
       {/* Image */}
       <div style={{ position: "relative", width: 248, height: 138, borderRadius: 16, overflow: "hidden", flexShrink: 0 }}>
         <img src={restaurant.imageSrc} alt={restaurant.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-        {/* Trust tag — top-left overlay */}
-        {restaurant.trustTag && (
-          <div
-            style={{
-              position: "absolute", top: 8, left: 8,
-              background: hasFriendTag ? "#FEE2E2" : "#DFF0FF",
-              borderRadius: 8, padding: "2px 6px",
-              fontFamily: "var(--font-poppins)", fontSize: 10, fontWeight: 700, color: "#0A0A0A",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {restaurant.trustTag.label}
+        {/* Trust tag — top-left overlay, hierarchy: friends > neotasters > redemption */}
+        {restaurant.trustTag?.type === "friends" && (
+          <div style={{
+            position: "absolute", top: 8, left: 8,
+            background: "#FEE2E2", borderRadius: 8, padding: "2px 6px",
+            fontFamily: "var(--font-poppins)", fontSize: 10, fontWeight: 700,
+            color: "#0A0A0A", whiteSpace: "nowrap", lineHeight: "12px",
+          }}>
+            💕 {restaurant.friendsCount} Friends visited
           </div>
         )}
-        {/* Social proof — bottom-left overlay */}
-        {(pin.type === "community" || pin.type === "friends") && restaurant.friendsCount && (
-          <div
-            style={{
-              position: "absolute", bottom: 8, left: 8,
-              background: "rgba(0,0,0,0.5)", borderRadius: 8, padding: "2px 6px",
-              fontFamily: "var(--font-poppins)", fontSize: 10, fontWeight: 700, color: "#FEFEFE",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {pin.type === "friends" ? `${restaurant.friendsCount} friends visited` : `${restaurant.friendsCount} people tried this week`}
+        {restaurant.trustTag?.type === "community" && (
+          <div style={{
+            position: "absolute", top: 8, left: 8,
+            background: "#DFF0FF", borderRadius: 8, padding: "2px 6px",
+            fontFamily: "var(--font-poppins)", fontSize: 10, fontWeight: 700,
+            color: "#0A0A0A", whiteSpace: "nowrap", lineHeight: "12px",
+          }}>
+            👥 {pin.communityCount} NeoTasters tried this week
+          </div>
+        )}
+        {restaurant.trustTag?.type === "redemption" && (
+          <div style={{
+            position: "absolute", top: 8, left: 8,
+            background: "rgba(0,0,0,0.5)", borderRadius: 8, padding: "2px 6px",
+            fontFamily: "var(--font-poppins)", fontSize: 10, fontWeight: 700,
+            color: "#FEFEFE", whiteSpace: "nowrap", lineHeight: "12px",
+          }}>
+            {restaurant.trustTag.label}
           </div>
         )}
       </div>
@@ -633,7 +636,7 @@ function SimilarCard({ pin, onOpen }: { pin: MapPin; onOpen: () => void }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {/* Star + rating + count — tight group */}
           <div style={{ display: "inline-flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
-            <Icon name="star" size={12} color="#737373" />
+            <Icon name="star" size={12} color="#53F293" />
             <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373" }}>{restaurant.rating}</span>
             <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373" }}>({restaurant.reviewCount})</span>
           </div>
