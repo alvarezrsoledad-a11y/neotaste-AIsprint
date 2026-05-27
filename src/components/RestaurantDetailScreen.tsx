@@ -110,13 +110,13 @@ function DealCard({
       {/* Chips row */}
       <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, border: chipBorder, borderRadius: 40, padding: "4px 8px" }}>
-          <Icon name="fire" size={12} color={chipColor} />
+          <Icon name="gift" size={12} color={chipColor} />
           <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 600, color: chipColor, lineHeight: "16px" }}>
             Avg. {deal.avgSpend}
           </span>
         </span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, border: chipBorder, borderRadius: 40, padding: "4px 8px" }}>
-          <Icon name="clock" size={12} color={chipColor} />
+          <Icon name="refresh" size={12} color={chipColor} />
           <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 600, color: chipColor, lineHeight: "16px" }}>
             {isLimited ? "Limited" : deal.validity}
           </span>
