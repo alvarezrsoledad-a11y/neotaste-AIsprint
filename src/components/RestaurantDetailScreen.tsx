@@ -538,12 +538,12 @@ export function BookingConfirmationScreen({ booking, onDone }: { booking: Confir
               {/* Restaurant details: map + CTAs */}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-                {/* Mini-map */}
-                <div style={{ borderRadius: 16, overflow: "hidden", height: 185 }}>
+                {/* Mini-map — isolation:isolate keeps Leaflet z-indexes from escaping */}
+                <div style={{ borderRadius: 16, overflow: "hidden", height: 185, isolation: "isolate" }}>
                   <div ref={bookingMapRef} style={{ width: "100%", height: "100%" }} />
                 </div>
 
-                {/* Get directions + Call */}
+                {/* Get directions + Call — spec node 421:38714 */}
                 <div style={{ display: "flex", gap: 8 }}>
                   <a
                     href={directionsUrl}
@@ -552,20 +552,22 @@ export function BookingConfirmationScreen({ booking, onDone }: { booking: Confir
                     style={{
                       flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                       borderRadius: 16, border: "2px solid rgba(0,0,0,0.05)",
-                      padding: "12px 16px", background: "transparent",
-                      textDecoration: "none",
-                      fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A",
+                      padding: "12px 16px", background: "rgba(254,254,254,0.05)",
+                      overflow: "hidden", textDecoration: "none",
+                      fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600,
+                      lineHeight: "18px", color: "#0A0A0A",
                     }}
                   >
-                    <Icon name="location" size={20} color="#0A0A0A" />
+                    <Icon name="location" size={16} color="#0A0A0A" />
                     Get directions
                   </a>
                   <button style={{
                     flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                     borderRadius: 16, border: "2px solid rgba(0,0,0,0.05)",
-                    padding: "12px 16px", background: "transparent",
-                    cursor: "pointer",
-                    fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A",
+                    padding: "12px 16px", background: "rgba(254,254,254,0.05)",
+                    overflow: "hidden", cursor: "pointer",
+                    fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600,
+                    lineHeight: "18px", color: "#0A0A0A",
                   }}>
                     <Icon name="phone" size={16} color="#0A0A0A" />
                     Call
@@ -583,6 +585,7 @@ export function BookingConfirmationScreen({ booking, onDone }: { booking: Confir
         {/* ── Sticky buttons — gradient fade from transparent → white ──── */}
         <div style={{
           position:      "absolute", left: 0, right: 0, bottom: 0,
+          zIndex:        2,
           paddingTop:    54, paddingLeft: 16, paddingRight: 16,
           paddingBottom: "max(24px, env(safe-area-inset-bottom))",
           background:    "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.37) 11%, #ffffff 38%)",
