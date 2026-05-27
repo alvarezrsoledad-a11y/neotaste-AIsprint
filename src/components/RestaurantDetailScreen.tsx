@@ -112,7 +112,7 @@ function DealCard({
         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, border: chipBorder, borderRadius: 40, padding: "4px 8px" }}>
           <Icon name="gift" size={12} color={chipColor} />
           <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 600, color: chipColor, lineHeight: "16px" }}>
-            Avg. {deal.avgSpend}
+            {deal.avgSpend}
           </span>
         </span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, border: chipBorder, borderRadius: 40, padding: "4px 8px" }}>
