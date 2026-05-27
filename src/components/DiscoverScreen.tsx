@@ -753,16 +753,7 @@ export function DiscoverScreen() {
           position: "absolute",
         }}
       >
-        {/* Progressive blur layer: 0→4px blur from Y 0%→100% (Figma spec).
-            A masked backdrop-filter div approximates this in CSS. */}
-        <div aria-hidden style={{
-          position: "absolute", inset: 0,
-          backdropFilter: "blur(4px)",
-          WebkitBackdropFilter: "blur(4px)",
-          maskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
-          pointerEvents: "none",
-        }} />
+        {/* No outer blur — wrapper stays transparent so bottom sheet shows through */}
 
         {/* Pill — exact Figma layer stack */}
         <div
@@ -783,10 +774,10 @@ export function DiscoverScreen() {
             WebkitBackdropFilter: "blur(20px)",
             pointerEvents: "none",
           }} />
-          {/* Layer 1 (bottom): rgba(255,255,255,0.5) base fill */}
+          {/* Layer 1 (bottom): base fill — higher opacity for opaque glassy pill */}
           <div aria-hidden style={{
             position: "absolute", inset: 0,
-            background: "rgba(255,255,255,0.5)",
+            background: "rgba(255,255,255,0.82)",
             pointerEvents: "none",
           }} />
           {/* Layer 2: #FFFFFF · plus-darker (CSS: lighten as closest approx) */}
