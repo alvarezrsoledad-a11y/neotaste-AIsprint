@@ -53,12 +53,41 @@ const FILTER_CHIPS = [
   { label: "Loyalty",     icon: "trophy",              hasDropdown: false },
 ];
 
+// ── Tab bar — inline SVG icons (paths extracted from Figma assets) ──────────
 const TABS = [
-  { label: "Home",     icon: "home",         active: false },
-  { label: "Friends",  icon: "users",        active: false },
-  { label: "Discover", icon: "map-pin",      active: true  },
-  { label: "Bookings", icon: "check-square", active: false },
-  { label: "Profile",  icon: "user",         active: false },
+  {
+    label: "Home", active: false,
+    viewBox: "0 0 21 22.5",
+    paths: [{ d: "M0 9V22.5H7.5V16.5C7.5 14.8431 8.84315 13.5 10.5 13.5C12.1569 13.5 13.5 14.8431 13.5 16.5V22.5H21V9L10.5 0L0 9Z" }],
+  },
+  {
+    label: "Friends", active: false,
+    viewBox: "0 0 24 21",
+    paths: [
+      { d: "M12 3.75C12 5.82107 10.3211 7.5 8.25 7.5C6.17893 7.5 4.5 5.82107 4.5 3.75C4.5 1.67893 6.17893 0 8.25 0C10.3211 0 12 1.67893 12 3.75Z" },
+      { d: "M4.5 10.5C2.01472 10.5 0 12.5147 0 15V21H12V10.5H4.5Z" },
+      { d: "M19.5 10.5H15V21H24V15C24 12.5147 21.9853 10.5 19.5 10.5Z" },
+      { d: "M18 7.5C19.6569 7.5 21 6.15685 21 4.5C21 2.84315 19.6569 1.5 18 1.5C16.3431 1.5 15 2.84315 15 4.5C15 6.15685 16.3431 7.5 18 7.5Z" },
+    ],
+  },
+  {
+    label: "Discover", active: true,
+    viewBox: "0 0 18 24",
+    paths: [{ d: "M2.06838 15.3355L9 24L15.9316 15.3355C17.2705 13.6618 18 11.5823 18 9.43898V9C18 4.02944 13.9706 0 9 0C4.02944 0 0 4.02944 0 9V9.43898C0 11.5823 0.729452 13.6618 2.06838 15.3355ZM9 12C10.6569 12 12 10.6569 12 9C12 7.34315 10.6569 6 9 6C7.34315 6 6 7.34315 6 9C6 10.6569 7.34315 12 9 12Z", fillRule: "evenodd" as const, clipRule: "evenodd" as const }],
+  },
+  {
+    label: "Bookings", active: false,
+    viewBox: "0 0 21 21",
+    paths: [{ d: "M21 0H0V21H21V0ZM17.5607 7.06066L15.4393 4.93934L8.25 12.1287L5.56066 9.43934L3.43934 11.5607L8.25 16.3713L17.5607 7.06066Z", fillRule: "evenodd" as const, clipRule: "evenodd" as const }],
+  },
+  {
+    label: "Profile", active: false,
+    viewBox: "0 0 18 21",
+    paths: [
+      { d: "M9 9C11.4853 9 13.5 6.98528 13.5 4.5C13.5 2.01472 11.4853 0 9 0C6.51472 0 4.5 2.01472 4.5 4.5C4.5 6.98528 6.51472 9 9 9Z" },
+      { d: "M18 16.5C18 14.0147 15.9853 12 13.5 12H4.5C2.01472 12 0 14.0147 0 16.5V21H18V16.5Z" },
+    ],
+  },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -777,10 +806,15 @@ export function DiscoverScreen() {
       />
 
       {/* ── TAB BAR ───────────────────────────────────────────────────── */}
-      {/* Outer wrapper: linear gradient bg (rgba(0,0,0,0) → rgba(0,0,0,0.03)) */}
+      {/* ── TAB BAR (rebuilt from scratch) ────────────────────────────── */}
+      {/*
+        Outer wrapper: transparent gradient bg + progressive blur (0→4px top→bottom).
+        z-40 sits above sheet (z-30), card (z-35), search (z-40 same level), below
+        detail/filter screens (z-50).
+      */}
       <div
-        className="absolute bottom-0 left-0 right-0 z-40"
         style={{
+          position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 40,
           background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.03) 100%)",
           paddingTop: 16,
           paddingBottom: "max(25px, env(safe-area-inset-bottom))",
@@ -789,10 +823,9 @@ export function DiscoverScreen() {
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "center",
-          position: "absolute",
         }}
       >
-        {/* Progressive blur on outer container: 0px at top → 4px at bottom */}
+        {/* Progressive blur layer (0→4px, top→bottom) on outer container */}
         <div aria-hidden style={{
           position: "absolute", inset: 0,
           backdropFilter: "blur(4px)",
@@ -802,36 +835,29 @@ export function DiscoverScreen() {
           pointerEvents: "none",
         }} />
 
-        {/* Pill — exact Figma layer stack */}
-        <div
-          style={{
-            flex: "1 0 0",
-            position: "relative",
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "center",
-            borderRadius: 296,
-            overflow: "hidden",
-          }}
-        >
-          {/* Backdrop blur for pill content */}
+        {/*
+          Pill — Figma layer stack (bottom to top):
+            1. Solid #FFFFFF base  ← blocks map bleed-through on all screens
+            2. rgba(255,255,255,0.5) secondary overlay
+            3. #333333 color-dodge
+            4. rgba(0,0,0,0.04) hard-light + backdrop-blur(20px) glass shimmer
+        */}
+        <div style={{
+          flex: "1 0 0",
+          position: "relative",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "center",
+          borderRadius: 296,
+          overflow: "hidden",
+          // Layer 1: solid white — Figma: linear-gradient(90deg,#FFF,#FFF)
+          // This is the critical opaque base; nothing behind it bleeds through.
+          background: "#FFFFFF",
+        }}>
+          {/* Layer 2: rgba(255,255,255,0.5) secondary overlay */}
           <div aria-hidden style={{
             position: "absolute", inset: 0,
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            pointerEvents: "none",
-          }} />
-          {/* Layer 1 (bottom): base fill — higher opacity for opaque glassy pill */}
-          <div aria-hidden style={{
-            position: "absolute", inset: 0,
-            background: "rgba(255,255,255,0.82)",
-            pointerEvents: "none",
-          }} />
-          {/* Layer 2: #FFFFFF · plus-darker (CSS: lighten as closest approx) */}
-          <div aria-hidden style={{
-            position: "absolute", inset: 0,
-            background: "#FFFFFF",
-            mixBlendMode: "lighten",
+            background: "rgba(255,255,255,0.5)",
             pointerEvents: "none",
           }} />
           {/* Layer 3: #333333 · color-dodge */}
@@ -841,14 +867,17 @@ export function DiscoverScreen() {
             mixBlendMode: "color-dodge",
             pointerEvents: "none",
           }} />
-          {/* Layer 4 (top): rgba(0,0,0,0.04) · hard-light */}
+          {/* Layer 4: backdrop-blur(20px) + rgba(0,0,0,0.04) · hard-light */}
           <div aria-hidden style={{
             position: "absolute", inset: 0,
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
             background: "rgba(0,0,0,0.04)",
             mixBlendMode: "hard-light",
             pointerEvents: "none",
           }} />
 
+          {/* Tab buttons */}
           {TABS.map((tab, i) => (
             <button
               key={tab.label}
@@ -859,70 +888,61 @@ export function DiscoverScreen() {
                 }
               }}
               style={{
-                flex: "1 0 0",
-                minWidth: 0,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
+                flex: "1 0 0", minWidth: 0,
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
                 gap: 1,
                 position: "relative",
                 padding: "6px 8px 7px",
-                /* tabs 1–4 overlap by -5.5px per Figma */
                 marginRight: i < TABS.length - 1 ? -5.5 : 0,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
+                background: "none", border: "none", cursor: "pointer",
                 opacity: tab.active ? 1 : 0.5,
                 zIndex: tab.active ? 2 : 1,
               }}
             >
-              {/* Active selection pill: absolutely centered, full height */}
+              {/* Active indicator pill: full height, 72.4px wide, centred on tab */}
               {tab.active && (
                 <div style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  left: "calc(50% + 0.2px)",
-                  transform: "translateX(-50%)",
-                  width: 72.4,
-                  borderRadius: 100,
+                  position: "absolute", top: 0, bottom: 0,
+                  left: "calc(50% + 0.2px)", transform: "translateX(-50%)",
+                  width: 72.4, borderRadius: 100,
                   background: "rgba(0,0,0,0.05)",
                   zIndex: 0,
                 }} />
               )}
-              {/* Icon container: 28px tall, 24×24 icon centered */}
+
+              {/* Icon: 24×24, inside a 28px-tall centring container */}
               <div style={{
-                height: 28,
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                position: "relative",
-                zIndex: 1,
-                flexShrink: 0,
+                height: 28, width: "100%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                position: "relative", zIndex: 1, flexShrink: 0,
               }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/assets/icons/tab-bar/${tab.icon}.svg`}
-                  alt=""
-                  width={24}
-                  height={24}
+                <svg
+                  width={24} height={24}
+                  viewBox={tab.viewBox}
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                   style={{ display: "block", flexShrink: 0 }}
-                />
+                  aria-hidden
+                >
+                  {tab.paths.map((p, pi) => (
+                    <path
+                      key={pi}
+                      d={p.d}
+                      fill="#0A0A0A"
+                      fillRule={"fillRule" in p ? p.fillRule : undefined}
+                      clipRule={"clipRule" in p ? p.clipRule : undefined}
+                    />
+                  ))}
+                </svg>
               </div>
-              {/* Label */}
+
+              {/* Label: Poppins Medium 10px */}
               <span style={{
                 fontFamily: "var(--font-poppins)",
-                fontSize: 10,
-                fontWeight: 500,
-                lineHeight: "12px",
-                color: "#0A0A0A",
-                textAlign: "center",
-                width: "100%",
-                position: "relative",
-                zIndex: 1,
-                flexShrink: 0,
+                fontSize: 10, fontWeight: 500, lineHeight: "12px",
+                color: "#0A0A0A", textAlign: "center",
+                width: "100%", position: "relative", zIndex: 1, flexShrink: 0,
               }}>
                 {tab.label}
               </span>
