@@ -505,10 +505,11 @@ export function DiscoverScreen() {
       <div
         className="absolute left-0 right-0 z-30 bg-white flex flex-col"
         style={{
-          // Sheet position / size — respects peek vs expanded mode
+          // Sheet position / size — extends to bottom:0 so the tab bar's
+          // transparent outer area shows the sheet (white) not the map.
           ...(sheetMode === "peek"
-            ? { bottom: TAB_BAR_H, height: SHEET_PEEK_H }
-            : { top: SHEET_EXPANDED_TOP, bottom: TAB_BAR_H }),
+            ? { bottom: 0, height: SHEET_PEEK_H + TAB_BAR_H }
+            : { top: SHEET_EXPANDED_TOP, bottom: 0 }),
           borderRadius: sheetMode === "expanded" ? "0" : "24px 24px 0 0",
           boxShadow:    sheetMode === "expanded" ? "none" : "0px -5px 6px rgba(160,160,160,0.25)",
           overflow:     "hidden",
