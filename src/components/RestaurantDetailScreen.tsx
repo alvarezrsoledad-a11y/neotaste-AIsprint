@@ -30,9 +30,9 @@ interface Props {
 }
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
-function StarRow({ count, size = 14, color = "#53F293" }: { count: number; size?: number; color?: string }) {
+function StarRow({ count, size = 14, color = "#53F293", gap = 2 }: { count: number; size?: number; color?: string; gap?: number }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap }}>
       {Array.from({ length: 5 }).map((_, i) => (
         <Icon
           key={i}
@@ -43,6 +43,11 @@ function StarRow({ count, size = 14, color = "#53F293" }: { count: number; size?
       ))}
     </span>
   );
+}
+
+function formatRatingCount(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}K`;
+  return n.toString();
 }
 
 function getSimilarRestaurants(current: MapPin, count = 4): MapPin[] {
@@ -496,8 +501,7 @@ function ReviewCard({ review, isLast }: { review: Review; isLast?: boolean }) {
 
   return (
     <div style={{
-      paddingBottom: 16,
-      marginBottom: isLast ? 0 : 16,
+      padding: "16px 0",
       borderBottom: isLast ? "none" : "1px solid rgba(0,0,0,0.1)",
     }}>
       {/* Avatar + name + badge */}
@@ -802,7 +806,8 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
   const totalForFilter = reviewFilter === "friends"
     ? friendReviews.length
     : (detail?.totalReviews ?? 0) - friendReviews.length;
-  const showSeeAll = totalForFilter > 5;
+  // Always show CTA when there are reviews — Figma shows it unconditionally
+  const showSeeAll = displayedReviews.length > 0;
 
   const similarPins = getSimilarRestaurants(pin);
 
@@ -1141,43 +1146,45 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
 
         {/* ───── RATINGS & REVIEWS ───── */}
         <div ref={reviewsRef} style={{ padding: "24px 16px 0", scrollMarginTop: FIXED_H }}>
-          <h2 style={{ fontFamily: "var(--font-poppins)", fontSize: 20, fontWeight: 700, lineHeight: "26px", color: "#0A0A0A", margin: "0 0 16px" }}>Ratings &amp; Reviews</h2>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+          {/* Title + summary block — gap 12px between heading and rating row */}
+          <h2 style={{ fontFamily: "var(--font-poppins)", fontSize: 20, fontWeight: 700, lineHeight: "26px", color: "#0A0A0A", margin: "0 0 12px" }}>Ratings &amp; Reviews</h2>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
             <span style={{ fontFamily: "var(--font-poppins)", fontSize: 44, fontWeight: 700, lineHeight: "52px", letterSpacing: "-0.3px", color: "#0A0A0A" }}>{restaurant.rating}</span>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <span style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "#737373" }}>
-                {detail.totalReviews.toLocaleString("de-DE")} Ratings &amp; Reviews
+                {formatRatingCount(detail.totalReviews)} Ratings &amp; Reviews
               </span>
-              <StarRow count={5} size={24} />
+              <StarRow count={5} size={24} gap={8} />
             </div>
           </div>
 
-          {/* Filter chips — always shown. Default = Friends if any exist, else NeoTasters. */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+          {/* Filter chips */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
             <button
               onClick={() => setReviewFilter("friends")}
               style={{
                 display: "flex", alignItems: "center", gap: 4, padding: "8px 12px",
                 borderRadius: 32, fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                background: "transparent",
-                color: reviewFilter === "friends" ? "#11301D" : "#737373",
+                background: "#FEFEFE",
+                color: reviewFilter === "friends" ? "#11301D" : "#0A0A0A",
                 border: reviewFilter === "friends" ? "2px solid #11301D" : "1px solid rgba(0,0,0,0.1)",
               }}
             >
-              Friends ({friendReviews.length})
+              💕 Friends ({friendReviews.length})
             </button>
             <button
               onClick={() => setReviewFilter("neotasters")}
               style={{
                 display: "flex", alignItems: "center", gap: 4, padding: "8px 12px",
                 borderRadius: 32, fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                background: "transparent",
-                color: reviewFilter === "neotasters" ? "#11301D" : "#737373",
+                background: "#FEFEFE",
+                color: reviewFilter === "neotasters" ? "#11301D" : "#0A0A0A",
                 border: reviewFilter === "neotasters" ? "2px solid #11301D" : "1px solid rgba(0,0,0,0.1)",
               }}
             >
-              NeoTasters
+              👥 NeoTasters
             </button>
           </div>
 
@@ -1190,7 +1197,7 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
               width: "100%", padding: 16, borderRadius: 16,
               background: "#F5F5F5", border: "none",
               fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, lineHeight: "20px",
-              color: "#0A0A0A", cursor: "pointer", marginTop: 8,
+              color: "#0A0A0A", cursor: "pointer", marginTop: 16,
               textAlign: "center", display: "block",
             }}>
               See all ratings &amp; reviews
