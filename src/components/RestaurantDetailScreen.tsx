@@ -1188,20 +1188,76 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
             </button>
           </div>
 
-          {displayedReviews.map((review, i) => (
-            <ReviewCard key={i} review={review} isLast={i === displayedReviews.length - 1} />
-          ))}
+          {reviewFilter === "friends" && friendReviews.length === 0 ? (
+            /* ── EMPTY STATE — no friend reviews ── */
+            <>
+              {/* Content block: avatars + copy + Find friends CTA */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 32, padding: "64px 0", width: "100%" }}>
+                {/* Avatars illustration */}
+                <img
+                  src="/assets/illustrations/avatars.svg"
+                  alt=""
+                  style={{ width: 236, height: 68, flexShrink: 0 }}
+                />
 
-          {showSeeAll && (
-            <button style={{
-              width: "100%", padding: 16, borderRadius: 16,
-              background: "#F5F5F5", border: "none",
-              fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, lineHeight: "20px",
-              color: "#0A0A0A", cursor: "pointer", marginTop: 16,
-              textAlign: "center", display: "block",
-            }}>
-              See all ratings &amp; reviews
-            </button>
+                {/* Copy */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center", textAlign: "center" }}>
+                  <p style={{
+                    fontFamily: "var(--font-poppins)", fontSize: 28, fontWeight: 700, lineHeight: "34px",
+                    color: "#0A0A0A", margin: 0,
+                  }}>
+                    Real recommendations<br />from people you know
+                  </p>
+                  <p style={{
+                    fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 500, lineHeight: "24px",
+                    color: "rgba(0,0,0,0.7)", margin: 0,
+                  }}>
+                    Connect your contacts to see what your friends discovered and what they liked.
+                  </p>
+                </div>
+
+                {/* Find friends — secondary CTA */}
+                <button style={{
+                  padding: 16, borderRadius: 16,
+                  background: "#F5F5F5", border: "none",
+                  fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, lineHeight: "20px",
+                  color: "#0A0A0A", cursor: "pointer",
+                  textAlign: "center",
+                }}>
+                  Find friends
+                </button>
+              </div>
+
+              {/* See all reviews — secondary CTA */}
+              <button style={{
+                width: "100%", padding: 16, borderRadius: 16,
+                background: "#F5F5F5", border: "none",
+                fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, lineHeight: "20px",
+                color: "#0A0A0A", cursor: "pointer", marginTop: 16,
+                textAlign: "center", display: "block",
+              }}>
+                See all reviews
+              </button>
+            </>
+          ) : (
+            /* ── NORMAL REVIEWS ── */
+            <>
+              {displayedReviews.map((review, i) => (
+                <ReviewCard key={i} review={review} isLast={i === displayedReviews.length - 1} />
+              ))}
+
+              {showSeeAll && (
+                <button style={{
+                  width: "100%", padding: 16, borderRadius: 16,
+                  background: "#F5F5F5", border: "none",
+                  fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, lineHeight: "20px",
+                  color: "#0A0A0A", cursor: "pointer", marginTop: 16,
+                  textAlign: "center", display: "block",
+                }}>
+                  See all ratings &amp; reviews
+                </button>
+              )}
+            </>
           )}
         </div>
 
