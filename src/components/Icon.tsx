@@ -108,6 +108,15 @@ const ICONS = {
   },
 
   // ── 16px additions ──────────────────────────────────────────────────────
+  "arrow-up-from-bracket": {
+    viewBox: "0 0 16 16",
+    body: (
+      <>
+        <path d="M4 5H7L7 11H9L9 5L12 5V4L8 0L4 4L4 5Z" />
+        <path d="M1 16L15 16V8H13V14L3 14L3 8L1 8V16Z" />
+      </>
+    ),
+  },
   signpost: {
     viewBox: "0 0 16 16",
     body: (

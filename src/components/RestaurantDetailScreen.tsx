@@ -353,6 +353,10 @@ function IOSShareSheet({ text, onClose }: { text: string; onClose: () => void })
 export function BookingConfirmationScreen({ booking, onDone }: { booking: ConfirmedBooking; onDone: () => void }) {
   const [showShareSheet, setShowShareSheet] = useState(false);
 
+  // Mini-map refs — same CartoDB light + green N pin as About section
+  const bookingMapRef         = useRef<HTMLDivElement>(null);
+  const bookingMapInstanceRef = useRef<import("leaflet").Map | null>(null);
+
   const slotDay  = booking.slot.split(" · ")[0];
   const slotTime = booking.slot.split(" · ")[1];
   const slotDateLabel = slotDay === "TODAY" ? "Today" : "Tomorrow";
@@ -370,6 +374,63 @@ export function BookingConfirmationScreen({ booking, onDone }: { booking: Confir
     }
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let cancelled = false;
+
+    import("leaflet").then((L) => {
+      if (cancelled || !bookingMapRef.current) return;
+
+      if (bookingMapInstanceRef.current) {
+        bookingMapInstanceRef.current.remove();
+        bookingMapInstanceRef.current = null;
+      }
+
+      const el = bookingMapRef.current!;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((el as any)._leaflet_id) (el as any)._leaflet_id = undefined;
+
+      const map = L.map(el, {
+        center:             [booking.lat, booking.lng],
+        zoom:               15,
+        zoomControl:        false,
+        scrollWheelZoom:    false,
+        doubleClickZoom:    false,
+        dragging:           false,
+        touchZoom:          false,
+        keyboard:           false,
+        attributionControl: false,
+      });
+
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        subdomains: "abcd",
+        maxZoom:    19,
+      }).addTo(map);
+
+      const pinHtml = [
+        '<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">',
+        '<path opacity="0.1" d="M32 16.0568C32 21.5455 12 32 12 32C12 32 9 21.5455 9 16.0568C9 14.1852 10.2116 12.3903 12.3683 11.0669C14.5249 9.74348 17.45 9 20.5 9C23.55 9 26.4751 9.74348 28.6317 11.0669C30.7884 12.3903 32 14.1852 32 16.0568Z" fill="#1C1D28"/>',
+        '<path fill-rule="evenodd" clip-rule="evenodd" d="M0 12V12.5853C0 15.4431 0.972602 18.2158 2.75783 20.4473L12 32L21.2422 20.4473C23.0274 18.2158 24 15.4431 24 12.5853V12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12Z" fill="#53F293"/>',
+        '<path d="M12 0.5C18.3513 0.5 23.5 5.64873 23.5 12V12.585C23.5 15.3292 22.5659 17.9919 20.8516 20.1348L12 31.1992L3.14844 20.1348C1.43414 17.9919 0.5 15.3292 0.5 12.585V12C0.5 5.64873 5.64873 0.5 12 0.5Z" stroke="#1C1D28" stroke-opacity="0.1"/>',
+        '<path fill-rule="evenodd" clip-rule="evenodd" d="M17.4429 17.0429C17.7644 16.9861 18 16.6914 18 16.3462V5.35327C18 5.13502 17.8151 4.96901 17.6119 5.00489L14.2785 5.59353C14.1178 5.62191 14 5.76925 14 5.9419V11.6468L10.2443 6.6727C10.0935 6.47288 9.8524 6.37514 9.6142 6.41721L6.56039 6.95648L6.55707 6.95707C6.23561 7.01384 6 7.30852 6 7.65382V18.6467C6 18.865 6.18495 19.031 6.38813 18.9951L9.72147 18.4064C9.8822 18.3781 10 18.2307 10 18.058V12.3532L13.7557 17.3273C13.9065 17.5271 14.1476 17.6248 14.3858 17.5828L14.3881 17.5824L17.4396 17.0435L17.4429 17.0429Z" fill="#1C1D28"/>',
+        '</svg>',
+      ].join("");
+
+      const icon = L.divIcon({ html: pinHtml, iconSize: [32, 32], iconAnchor: [12, 32], className: "" });
+      L.marker([booking.lat, booking.lng], { icon }).addTo(map);
+
+      bookingMapInstanceRef.current = map;
+    });
+
+    return () => {
+      cancelled = true;
+      if (bookingMapInstanceRef.current) {
+        bookingMapInstanceRef.current.remove();
+        bookingMapInstanceRef.current = null;
+      }
+    };
+  }, [booking.lat, booking.lng]);
+
   return (
     <>
       <div
@@ -385,80 +446,170 @@ export function BookingConfirmationScreen({ booking, onDone }: { booking: Confir
           height: "88%",
         }}
       >
+        {/* Drag handle */}
         <div
           onClick={onDone}
           style={{ flexShrink: 0, display: "flex", justifyContent: "center", padding: "12px 0 4px", cursor: "pointer" }}
         >
           <div style={{ width: 44, height: 4, borderRadius: 2, background: "rgba(0,0,0,0.1)" }} />
         </div>
-        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 24px 0" }}>
+
+        {/* Scrollable content */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 16px 0" }}>
+
+          {/* Illustration */}
           <div style={{ width: 240, margin: "0 auto 4px" }}>
             <img src="/illustration-confirmation.svg" alt="Deal booked illustration" style={{ width: "100%", height: "auto", display: "block" }} />
           </div>
+
+          {/* Title */}
           <h1 style={{ fontFamily: "var(--font-poppins)", fontSize: 24, fontWeight: 700, color: "#0A0A0A", margin: "0 0 8px", textAlign: "center", lineHeight: 1.25 }}>
             Deal booked!
           </h1>
+
+          {/* Subtitle — restaurant name in semibold */}
           <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, color: "#737373", margin: "0 0 24px", textAlign: "center", lineHeight: 1.55 }}>
-            Enjoy the deal at {booking.restaurantName}.<br />
-            If you need to reserve a table, please contact the restaurant.
+            Enjoy the deal at{" "}
+            <span style={{ fontWeight: 600, color: "#0A0A0A" }}>{booking.restaurantName}</span>
           </p>
-          <div style={{ width: "100%", border: "1px solid rgba(0,0,0,0.09)", borderRadius: 20, overflow: "hidden", marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 16px", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F5F5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="clock" size={16} color="#0A0A0A" />
+
+          {/* ── Info box ─────────────────────────────────────────────────── */}
+          <div style={{
+            border: "1px solid rgba(0,0,0,0.05)", borderRadius: 16,
+            overflow: "hidden", marginBottom: 20,
+            display: "flex", flexDirection: "column",
+          }}>
+
+            {/* Date row */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 16,
+              paddingTop: 16, paddingBottom: 8, paddingLeft: 16, paddingRight: 16,
+              borderBottom: "1px solid rgba(0,0,0,0.05)",
+            }}>
+              <div style={{ width: 36, height: 36, flexShrink: 0, background: "#F5F5F5", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 16, lineHeight: 1 }}>📅</span>
               </div>
               <div>
-                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Date</p>
-                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 600, color: "#0A0A0A", margin: 0 }}>{slotDateLabel}</p>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 10, fontWeight: 400, color: "#737373", margin: 0, lineHeight: "18px" }}>Date</p>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A", margin: 0, lineHeight: "18px" }}>{slotDateLabel}</p>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 16px", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F5F5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="clock" size={16} color="#0A0A0A" />
+
+            {/* Time row */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 16,
+              paddingTop: 8, paddingBottom: 8, paddingLeft: 16, paddingRight: 16,
+              borderBottom: "1px solid rgba(0,0,0,0.05)",
+            }}>
+              <div style={{ width: 36, height: 36, flexShrink: 0, background: "#F5F5F5", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 16, lineHeight: 1 }}>🕐</span>
               </div>
               <div>
-                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Time</p>
-                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 15, fontWeight: 600, color: "#0A0A0A", margin: 0 }}>{slotTime}</p>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 10, fontWeight: 400, color: "#737373", margin: 0, lineHeight: "18px" }}>Time</p>
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A", margin: 0, lineHeight: "18px" }}>{slotTime}</p>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 16px" }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F5F5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="location" size={16} color="#0A0A0A" />
+
+            {/* Restaurant Info section */}
+            <div style={{
+              display: "flex", flexDirection: "column", gap: 16,
+              paddingTop: 8, paddingBottom: 16, paddingLeft: 16, paddingRight: 16,
+            }}>
+
+              {/* Address row */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                <div style={{ width: 36, height: 36, flexShrink: 0, background: "#F5F5F5", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 16, lineHeight: 1 }}>ℹ️</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 10, fontWeight: 400, color: "#737373", margin: 0, lineHeight: "18px" }}>Restaurant Info</p>
+                  <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A", margin: 0, lineHeight: "18px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{booking.address}</p>
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 12, fontWeight: 500, color: "#737373", margin: "0 0 2px" }}>Location</p>
-                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A", margin: "0 0 1px", lineHeight: 1.4 }}>{booking.address}</p>
-                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 12, color: "#737373", margin: 0 }}>{booking.neighborhood} · {booking.distance} away</p>
+
+              {/* Snackbar note */}
+              <div style={{ background: "#F5F5F5", borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <Icon name="circle-info" size={16} color="#0A0A0A" style={{ flexShrink: 0, marginTop: 2 }} />
+                <p style={{ fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 500, color: "rgba(0,0,0,0.7)", margin: 0, lineHeight: "20px" }}>
+                  If you need to reserve a table, please contact the restaurant.
+                </p>
               </div>
-              <a
-                href={directionsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  flexShrink: 0, height: 34, borderRadius: 10, padding: "0 12px",
-                  background: "rgba(17,48,29,0.07)", color: "#11301D",
-                  fontFamily: "var(--font-poppins)", fontSize: 13, fontWeight: 600,
-                  display: "flex", alignItems: "center", gap: 6,
-                  textDecoration: "none",
-                }}
-              >
-                <Icon name="location" size={16} color="#11301D" />
-                Directions
-              </a>
+
+              {/* Restaurant details: map + CTAs */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+                {/* Mini-map */}
+                <div style={{ borderRadius: 16, overflow: "hidden", height: 185 }}>
+                  <div ref={bookingMapRef} style={{ width: "100%", height: "100%" }} />
+                </div>
+
+                {/* Get directions + Call */}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <a
+                    href={directionsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                      borderRadius: 16, border: "2px solid rgba(0,0,0,0.05)",
+                      padding: "12px 16px", background: "transparent",
+                      textDecoration: "none",
+                      fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A",
+                    }}
+                  >
+                    <Icon name="location" size={20} color="#0A0A0A" />
+                    Get directions
+                  </a>
+                  <button style={{
+                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    borderRadius: 16, border: "2px solid rgba(0,0,0,0.05)",
+                    padding: "12px 16px", background: "transparent",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, color: "#0A0A0A",
+                  }}>
+                    <Icon name="phone" size={16} color="#0A0A0A" />
+                    Call
+                  </button>
+                </div>
+
+              </div>
             </div>
           </div>
-          <div style={{ height: 160, flexShrink: 0 }} />
+
+          {/* Spacer so content scrolls above sticky buttons */}
+          <div style={{ height: 200, flexShrink: 0 }} />
         </div>
-        <div style={{ flexShrink: 0, padding: "12px 24px", paddingBottom: "max(36px, env(safe-area-inset-bottom))", background: "#fff", borderTop: "1px solid rgba(0,0,0,0.07)" }}>
+
+        {/* ── Sticky buttons — gradient fade from transparent → white ──── */}
+        <div style={{
+          position:      "absolute", left: 0, right: 0, bottom: 0,
+          paddingTop:    54, paddingLeft: 16, paddingRight: 16,
+          paddingBottom: "max(24px, env(safe-area-inset-bottom))",
+          background:    "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.37) 11%, #ffffff 38%)",
+          display:       "flex", flexDirection: "column", gap: 8,
+          pointerEvents: "none",
+        }}>
           <button
             onClick={handleShare}
-            style={{ width: "100%", height: 52, borderRadius: 16, background: CTA_BG, color: CTA_TEXT, fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            style={{
+              width: "100%", borderRadius: 16, background: "#53F293",
+              color: "#0A0A0A", border: "none", cursor: "pointer",
+              fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              padding: 16, pointerEvents: "auto",
+            }}
           >
-            <Icon name="arrow-up-right-from-square" size={18} color={CTA_TEXT} />
-            Share with friends
+            <Icon name="arrow-up-from-bracket" size={16} color="#0A0A0A" />
+            Share with friend
           </button>
           <button
-            style={{ width: "100%", height: 44, borderRadius: 16, background: "transparent", color: "#737373", fontFamily: "var(--font-poppins)", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{
+              width: "100%", borderRadius: 16, background: "#F5F5F5",
+              color: "#0A0A0A", border: "none", cursor: "pointer",
+              fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 600,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: 16, pointerEvents: "auto",
+            }}
           >
             Go to bookings
           </button>
