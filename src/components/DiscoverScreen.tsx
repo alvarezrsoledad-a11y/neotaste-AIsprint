@@ -44,13 +44,13 @@ const SHEET_PEEK_H   = 68;
 const SHEET_PEEK_TOP = SCREEN_H - TAB_BAR_H - SHEET_PEEK_H; // 694
 
 const FILTER_CHIPS = [
-  { label: "People",      icon: "👥" },
-  { label: "Filters",     icon: "⚙️" },
-  { label: "Now",         icon: "🕐" },
-  { label: "Cuisine",     icon: "🍽️" },
-  { label: "Sort",        icon: "↕️" },
-  { label: "Flash Deals", icon: "⚡" },
-  { label: "Loyalty",     icon: "🏆" },
+  { label: "People",      icon: "logo",               hasDropdown: false },
+  { label: "Filters",     icon: "sliders",             hasDropdown: true  },
+  { label: "Now",         icon: "clock",               hasDropdown: false },
+  { label: "Cuisine",     icon: "utensils",            hasDropdown: true  },
+  { label: "Sort",        icon: "arrow-up-arrow-down", hasDropdown: true  },
+  { label: "Flash Deals", icon: "bolt",                hasDropdown: false },
+  { label: "Loyalty",     icon: "trophy",              hasDropdown: false },
 ];
 
 const TABS = [
@@ -296,69 +296,90 @@ export function DiscoverScreen() {
       </div>
 
       {/* ── SEARCH BAR + FILTER CHIPS (hidden when list overlay is open) ── */}
-      {!listOverlayOpen && <div className="absolute left-4 right-4 z-40 flex flex-col gap-3" style={{ top: "env(safe-area-inset-top, 12px)", paddingTop: 8 }}>
+      {!listOverlayOpen && (
         <div
-          className="w-full h-12 bg-white rounded-full flex items-center gap-2 px-4"
-          style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)" }}
+          className="absolute left-4 right-4 z-40 flex flex-col"
+          style={{ top: "env(safe-area-inset-top, 12px)", paddingTop: 8, gap: 16 }}
         >
-          <span className="text-base">🔍</span>
-          <span
-            className="text-base font-medium"
-            style={{ color: "rgba(0,0,0,0.7)", fontFamily: "var(--font-poppins)" }}
+          {/* Search bar */}
+          <div
+            style={{
+              width: "100%", height: 48,
+              background: "#FEFEFE", borderRadius: 32,
+              boxShadow: "0px 2px 7px rgba(67,67,67,0.25)",
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "12px 16px", boxSizing: "border-box",
+            }}
           >
-            Search deals &amp; more
-          </span>
-        </div>
-        <div
-          className="flex items-center gap-1 overflow-x-auto"
-          style={{ scrollbarWidth: "none" }}
-        >
-          {FILTER_CHIPS.map((chip) => {
-            const isPeople = chip.label === "People";
-            const isActive = isPeople && peopleFilterActive;
-            return (
-              <button
-                key={chip.label}
-                onClick={isPeople ? () => setPeopleFilterOpen(true) : undefined}
-                className="shrink-0 flex items-center gap-1 rounded-2xl px-3 py-2"
-                style={{
-                  background: isActive ? "#11301D" : "#FEFEFE",
-                  color:      isActive ? "#FEFEFE" : "#0A0A0A",
-                  boxShadow:  "0px 2px 7px rgba(67,67,67,0.25)",
-                  fontFamily: "var(--font-poppins)",
-                  border:     "1px solid transparent",
-                }}
-              >
-                <span className="text-[11px]">{chip.icon}</span>
-                <span className="text-[14px] font-semibold whitespace-nowrap" style={{ color: "inherit" }}>
-                  {chip.label}
-                </span>
-                {isActive && peopleFilterBadgeCount > 0 && (
-                  <span
-                    style={{
-                      display:        "inline-flex",
-                      alignItems:     "center",
-                      justifyContent: "center",
-                      minWidth:       18,
-                      height:         18,
-                      padding:        "0 5px",
-                      marginLeft:     2,
-                      borderRadius:   9,
-                      background:     "#53F293",
-                      color:          "#0A0A0A",
-                      fontSize:       11,
-                      fontWeight:     700,
-                      lineHeight:     1,
-                    }}
-                  >
-                    {peopleFilterBadgeCount}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/icons/16px/magnifying-glass.svg" width={16} height={16} alt="" style={{ flexShrink: 0 }} />
+            <span style={{ fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 500, lineHeight: "24px", color: "rgba(0,0,0,0.7)", whiteSpace: "nowrap" }}>
+              Search deals &amp; more
+            </span>
+          </div>
+          {/* Filter chips — extra vertical padding so drop-shadows are not clipped */}
+          <div
+            style={{ display: "flex", alignItems: "center", gap: 4, overflowX: "auto", scrollbarWidth: "none", paddingTop: 6, paddingBottom: 6, marginTop: -6, marginBottom: -6 }}
+          >
+            {FILTER_CHIPS.map((chip) => {
+              const isPeople = chip.label === "People";
+              const isActive = isPeople && peopleFilterActive;
+              return (
+                <button
+                  key={chip.label}
+                  onClick={isPeople ? () => setPeopleFilterOpen(true) : undefined}
+                  style={{
+                    flexShrink: 0,
+                    display: "inline-flex", alignItems: "center",
+                    gap: chip.hasDropdown ? 8 : 4,
+                    borderRadius: 16,
+                    padding: "8px 12px",
+                    background: isActive ? "#11301D" : "#FEFEFE",
+                    boxShadow: "0px 2px 7px rgba(67,67,67,0.25)",
+                    border: "none", cursor: "pointer",
+                    fontFamily: "var(--font-poppins)",
+                  }}
+                >
+                  {/* Icon + label group */}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/assets/icons/12px/${chip.icon}.svg`}
+                      width={chip.icon === "logo" ? 12 : 12}
+                      height={chip.icon === "logo" ? 14 : 12}
+                      alt=""
+                      style={{ flexShrink: 0, filter: isActive ? "brightness(0) invert(1)" : "none" }}
+                    />
+                    <span style={{ fontSize: 14, fontWeight: 600, lineHeight: "18px", color: isActive ? "#FEFEFE" : "#0A0A0A", whiteSpace: "nowrap" }}>
+                      {chip.label}
+                    </span>
                   </span>
-                )}
-              </button>
-            );
-          })}
+                  {/* Dropdown arrow */}
+                  {chip.hasDropdown && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src="/assets/icons/12px/angle-down.svg"
+                      width={12} height={12} alt=""
+                      style={{ flexShrink: 0, filter: isActive ? "brightness(0) invert(1)" : "none" }}
+                    />
+                  )}
+                  {/* Active badge count (People chip) */}
+                  {isActive && peopleFilterBadgeCount > 0 && (
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      minWidth: 18, height: 18, padding: "0 5px", marginLeft: 2,
+                      borderRadius: 9, background: "#53F293",
+                      color: "#0A0A0A", fontSize: 11, fontWeight: 700, lineHeight: 1,
+                    }}>
+                      {peopleFilterBadgeCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>}
+      )}
 
       {/* ── LOCATION BUTTON (hidden when pin selected or sheet expanded) ── */}
       {showFloatingButtons && (
@@ -570,29 +591,36 @@ export function DiscoverScreen() {
           <div className="w-11 h-1 rounded-full bg-[rgba(0,0,0,0.1)]" />
         </div>
 
-        {/* Pinned header: search bar + filter chips (Fix 1: elevation shadow) */}
+        {/* Pinned header: search bar + filter chips */}
         <div
-          className="flex-none flex flex-col gap-3 px-4"
           style={{
-            paddingTop:    8,
-            paddingBottom: 8,
-            boxShadow:     isHeaderElevated ? "0 4px 12px rgba(0,0,0,0.08)" : "none",
-            transition:    "box-shadow 0.2s ease",
+            flexShrink: 0,
+            display: "flex", flexDirection: "column", gap: 16,
+            padding: "8px 16px",
+            boxShadow: isHeaderElevated ? "0 4px 12px rgba(0,0,0,0.08)" : "none",
+            transition: "box-shadow 0.2s ease",
           }}
         >
+          {/* Search bar */}
           <div
-            className="w-full h-12 bg-white rounded-full flex items-center gap-2 px-4"
-            style={{ boxShadow: "0px 2px 7px rgba(67,67,67,0.25)" }}
+            style={{
+              width: "100%", height: 48,
+              background: "#FEFEFE", borderRadius: 32,
+              boxShadow: "0px 2px 7px rgba(67,67,67,0.25)",
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "12px 16px", boxSizing: "border-box",
+            }}
           >
-            <span className="text-base">🔍</span>
-            <span
-              className="text-base font-medium"
-              style={{ color: "rgba(0,0,0,0.7)", fontFamily: "var(--font-poppins)" }}
-            >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/icons/16px/magnifying-glass.svg" width={16} height={16} alt="" style={{ flexShrink: 0 }} />
+            <span style={{ fontFamily: "var(--font-poppins)", fontSize: 16, fontWeight: 500, lineHeight: "24px", color: "rgba(0,0,0,0.7)", whiteSpace: "nowrap" }}>
               Search deals &amp; more
             </span>
           </div>
-          <div className="flex items-center gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          {/* Filter chips */}
+          <div
+            style={{ display: "flex", alignItems: "center", gap: 4, overflowX: "auto", scrollbarWidth: "none", paddingTop: 6, paddingBottom: 6, marginTop: -6, marginBottom: -6 }}
+          >
             {FILTER_CHIPS.map((chip) => {
               const isPeople = chip.label === "People";
               const isActive = isPeople && peopleFilterActive;
@@ -600,35 +628,46 @@ export function DiscoverScreen() {
                 <button
                   key={chip.label}
                   onClick={isPeople ? () => setPeopleFilterOpen(true) : undefined}
-                  className="shrink-0 flex items-center gap-1 rounded-2xl px-3 py-2"
                   style={{
+                    flexShrink: 0,
+                    display: "inline-flex", alignItems: "center",
+                    gap: chip.hasDropdown ? 8 : 4,
+                    borderRadius: 16,
+                    padding: "8px 12px",
                     background: isActive ? "#11301D" : "#FEFEFE",
-                    color:      isActive ? "#FEFEFE" : "#0A0A0A",
-                    boxShadow:  "0px 2px 7px rgba(67,67,67,0.25)",
+                    boxShadow: "0px 2px 7px rgba(67,67,67,0.25)",
+                    border: "none", cursor: "pointer",
                     fontFamily: "var(--font-poppins)",
-                    border:     "1px solid transparent",
                   }}
                 >
-                  <span className="text-[11px]">{chip.icon}</span>
-                  <span className="text-[14px] font-semibold whitespace-nowrap" style={{ color: "inherit" }}>{chip.label}</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/assets/icons/12px/${chip.icon}.svg`}
+                      width={12}
+                      height={chip.icon === "logo" ? 14 : 12}
+                      alt=""
+                      style={{ flexShrink: 0, filter: isActive ? "brightness(0) invert(1)" : "none" }}
+                    />
+                    <span style={{ fontSize: 14, fontWeight: 600, lineHeight: "18px", color: isActive ? "#FEFEFE" : "#0A0A0A", whiteSpace: "nowrap" }}>
+                      {chip.label}
+                    </span>
+                  </span>
+                  {chip.hasDropdown && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src="/assets/icons/12px/angle-down.svg"
+                      width={12} height={12} alt=""
+                      style={{ flexShrink: 0, filter: isActive ? "brightness(0) invert(1)" : "none" }}
+                    />
+                  )}
                   {isActive && peopleFilterBadgeCount > 0 && (
-                    <span
-                      style={{
-                        display:        "inline-flex",
-                        alignItems:     "center",
-                        justifyContent: "center",
-                        minWidth:       18,
-                        height:         18,
-                        padding:        "0 5px",
-                        marginLeft:     2,
-                        borderRadius:   9,
-                        background:     "#53F293",
-                        color:          "#0A0A0A",
-                        fontSize:       11,
-                        fontWeight:     700,
-                        lineHeight:     1,
-                      }}
-                    >
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      minWidth: 18, height: 18, padding: "0 5px", marginLeft: 2,
+                      borderRadius: 9, background: "#53F293",
+                      color: "#0A0A0A", fontSize: 11, fontWeight: 700, lineHeight: 1,
+                    }}>
                       {peopleFilterBadgeCount}
                     </span>
                   )}
