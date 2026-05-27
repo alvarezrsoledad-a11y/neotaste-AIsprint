@@ -296,7 +296,11 @@ export function DiscoverScreen() {
   }, []);
 
   const visiblePinIds = useMemo<Set<number> | null>(() => {
-    if (activeFilters === null) return null;
+    if (activeFilters === null) {
+      // Default map: hide community/NeoTaster-only pins.
+      // They surface only when "People → NeoTasters" filter is active (Fix 3).
+      return new Set(MAP_PINS.filter(p => p.type !== "community").map(p => p.id));
+    }
     return computeFilteredPinIds(activeFilters);
   }, [activeFilters, computeFilteredPinIds]);
 
@@ -473,7 +477,10 @@ export function DiscoverScreen() {
                 : undefined,
             ]}
             socialProof={{
-              variant: selectedPin.restaurant.socialProof!.variant,
+              // When a People filter is active, force the variant to match the
+              // filter tab so the quote-box colour always agrees with the pin
+              // visual (friends filter → pink, neotasters filter → green).
+              variant: activeFilters?.tab ?? selectedPin.restaurant.socialProof!.variant,
               quote:   selectedPin.restaurant.socialProof!.quote,
               names:   selectedPin.restaurant.socialProof!.names,
               avatars: selectedPin.restaurant.socialProof!.avatars,
@@ -542,6 +549,18 @@ export function DiscoverScreen() {
       {detailPinId !== null && (() => {
         const detailPin = MAP_PINS.find((p) => p.id === detailPinId);
         if (!detailPin) return null;
+        // Override socialProof.variant to match the active People filter tab
+        // so the detail-page quote box always agrees with the pin visual.
+        const filterTab = activeFilters?.tab;
+        const pinForDetail: typeof detailPin = filterTab && detailPin.restaurant.socialProof
+          ? {
+              ...detailPin,
+              restaurant: {
+                ...detailPin.restaurant,
+                socialProof: { ...detailPin.restaurant.socialProof, variant: filterTab },
+              },
+            }
+          : detailPin;
         return (
           <div
             className="absolute inset-0 z-50"
@@ -551,7 +570,7 @@ export function DiscoverScreen() {
             }}
           >
             <RestaurantDetailScreen
-              pin={detailPin}
+              pin={pinForDetail}
               onClose={() => setDetailPinId(null)}
             />
           </div>
@@ -740,7 +759,8 @@ export function DiscoverScreen() {
                     : undefined,
                 ]}
                 socialProof={{
-                  variant: pin.restaurant.socialProof!.variant,
+                  // Same filter-tab override as the floating card.
+                  variant: activeFilters?.tab ?? pin.restaurant.socialProof!.variant,
                   quote:   pin.restaurant.socialProof!.quote,
                   names:   pin.restaurant.socialProof!.names,
                   avatars: pin.restaurant.socialProof!.avatars,
