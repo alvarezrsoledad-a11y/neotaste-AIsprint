@@ -36,7 +36,9 @@ export default function RootLayout({
   m.mazeUniversalSnippetApiKey = e;
 })(window, document, 'https://snippet.maze.co/maze-universal-loader.js', 'b99537ca-0d05-4cff-a65a-6aad22da961e');` }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <div className="mobile-frame">{children}</div>
+      </body>
     </html>
   );
 }
