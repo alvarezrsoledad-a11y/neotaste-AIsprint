@@ -488,8 +488,7 @@ export function DiscoverScreen() {
             ]}
             socialProof={(() => {
               const sp        = selectedPin.restaurant.socialProof!;
-              // Default/Tiny pins have no personal connection — show only count.
-              const isDefault = selectedPin.type !== "friends" && selectedPin.type !== "community";
+              const isDefault = selectedPin.type !== "friends" && (selectedPin.type !== "community" || activeFilters?.tab === "neotasters");
               const countMatch = isDefault ? sp.names.match(/\+(\d+) visited/) : null;
               return {
                 // When a People filter is active, force the variant to match the
@@ -587,6 +586,7 @@ export function DiscoverScreen() {
             <RestaurantDetailScreen
               pin={pinForDetail}
               onClose={() => setDetailPinId(null)}
+              filterTab={filterTab}
             />
           </div>
         );
@@ -775,7 +775,7 @@ export function DiscoverScreen() {
                 ]}
                 socialProof={(() => {
                   const sp        = pin.restaurant.socialProof!;
-                  const isDefault = pin.type !== "friends" && pin.type !== "community";
+                  const isDefault = pin.type !== "friends" && (pin.type !== "community" || activeFilters?.tab === "neotasters");
                   const countMatch = isDefault ? sp.names.match(/\+(\d+) visited/) : null;
                   return {
                     // Same filter-tab override as the floating card.

@@ -27,6 +27,7 @@ interface Props {
   pin:             MapPin;
   onClose:         () => void;
   initialDealIdx?: number;
+  filterTab?:      "friends" | "neotasters";
 }
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
@@ -827,15 +828,17 @@ function SimilarCard({ pin, onOpen }: { pin: MapPin; onOpen: () => void }) {
 function SocialProofBanner({
   pin,
   onViewReviews,
+  filterTab,
 }: {
   pin:           MapPin;
   onViewReviews: () => void;
+  filterTab?:    "friends" | "neotasters";
 }) {
   const sp = pin.restaurant.socialProof;
   if (!sp) return null;
 
   const isFriends = sp.variant === "friends";
-  const isDefault = pin.type !== "friends" && pin.type !== "community";
+  const isDefault = pin.type !== "friends" && (pin.type !== "community" || filterTab === "neotasters");
   // Friends → Mango/50, NeoTasters → Green/50
   const bg        = isFriends ? "#FFF8EB" : "#EEFEF4";
   const firstName = pickFirstName(sp.names);
@@ -924,7 +927,7 @@ function SocialProofBanner({
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) {
+export function RestaurantDetailScreen({ pin, onClose, initialDealIdx, filterTab }: Props) {
   const { restaurant } = pin;
   const detail = getRestaurantDetail(pin.id);
 
@@ -1288,7 +1291,7 @@ export function RestaurantDetailScreen({ pin, onClose, initialDealIdx }: Props) 
 
           {/* 4 ── Social proof banner (NEW) */}
           <div style={{ marginBottom: 16 }}>
-            <SocialProofBanner pin={pin} onViewReviews={() => scrollTo(reviewsRef)} />
+            <SocialProofBanner pin={pin} onViewReviews={() => scrollTo(reviewsRef)} filterTab={filterTab} />
           </div>
         </div>
 
