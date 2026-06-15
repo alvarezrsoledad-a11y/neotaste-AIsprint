@@ -883,9 +883,7 @@ function SocialProofBanner({
               <><span style={{ fontWeight: 600 }}>{firstName}</span>{sp.names.slice(firstName.length)}</>
             )}
           </span>
-          {/* Avatars: 1 for Friends, stacked up to 3 for NeoTasters; hidden for Default/Tiny */}
-          {!isDefault && (
-            <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
               {sp.avatars.slice(0, isFriends ? 1 : 3).map((src, i, arr) => (
                 <div
                   key={i}
@@ -901,8 +899,7 @@ function SocialProofBanner({
                   <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
               ))}
-            </div>
-          )}
+          </div>
         </div>
         <button
           onClick={onViewReviews}

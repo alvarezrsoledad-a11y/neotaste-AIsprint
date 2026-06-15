@@ -497,7 +497,7 @@ export function DiscoverScreen() {
                 variant: activeFilters?.tab ?? sp.variant,
                 quote:   sp.quote,
                 names:   countMatch ? `${countMatch[1]} visited` : sp.names,
-                avatars: isDefault ? [] : sp.avatars,
+                avatars: sp.avatars,
               };
             })()}
             isExiting={cardClosing}
@@ -782,7 +782,7 @@ export function DiscoverScreen() {
                     variant: activeFilters?.tab ?? sp.variant,
                     quote:   sp.quote,
                     names:   countMatch ? `${countMatch[1]} visited` : sp.names,
-                    avatars: isDefault ? [] : sp.avatars,
+                    avatars: sp.avatars,
                   };
                 })()}
                 onViewDetail={() => {
