@@ -157,7 +157,7 @@ function RankTag({ rank }: { rank: number }) {
         position:      "absolute",
         left:          12,
         top:           -8,
-        background:    "#FFC86A",
+        background:    "#262626",
         borderRadius:  8,
         padding:       "2px 4px",
         display:       "flex",
@@ -172,7 +172,7 @@ function RankTag({ rank }: { rank: number }) {
           fontSize:   10,
           fontWeight: 700,
           lineHeight: "12px",
-          color:      "#0A0A0A",
+          color:      "#FEFEFE",
           fontFamily: "var(--font-poppins)",
           whiteSpace: "nowrap",
         }}

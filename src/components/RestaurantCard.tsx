@@ -106,14 +106,14 @@ export function RestaurantCard({
                   position:     "absolute",
                   top:          8,
                   left:         8,
-                  background:   "#FFC86A",
+                  background:   "#262626",
                   borderRadius: 8,
                   padding:      "2px 4px",
                   fontFamily:   "var(--font-poppins)",
                   fontSize:     10,
                   fontWeight:   700,
                   lineHeight:   "12px",
-                  color:        "#0A0A0A",
+                  color:        "#FEFEFE",
                   whiteSpace:   "nowrap",
                 }}
               >
