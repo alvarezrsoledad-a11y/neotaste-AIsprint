@@ -486,15 +486,20 @@ export function DiscoverScreen() {
                 ? { id: `${selectedPin.id}-1`, title: selectedPin.restaurant.deals[1] }
                 : undefined,
             ]}
-            socialProof={{
-              // When a People filter is active, force the variant to match the
-              // filter tab so the quote-box colour always agrees with the pin
-              // visual (friends filter → pink, neotasters filter → green).
-              variant: activeFilters?.tab ?? selectedPin.restaurant.socialProof!.variant,
-              quote:   selectedPin.restaurant.socialProof!.quote,
-              names:   selectedPin.restaurant.socialProof!.names,
-              avatars: selectedPin.restaurant.socialProof!.avatars,
-            }}
+            socialProof={(() => {
+              const sp        = selectedPin.restaurant.socialProof!;
+              // Default/Tiny pins have no personal connection — show only count.
+              const isDefault = selectedPin.type !== "friends" && selectedPin.type !== "community";
+              const countMatch = isDefault ? sp.names.match(/\+(\d+) visited/) : null;
+              return {
+                // When a People filter is active, force the variant to match the
+                // filter tab so the quote-box colour always agrees with the pin.
+                variant: activeFilters?.tab ?? sp.variant,
+                quote:   sp.quote,
+                names:   countMatch ? `${countMatch[1]} visited` : sp.names,
+                avatars: isDefault ? [] : sp.avatars,
+              };
+            })()}
             isExiting={cardClosing}
             onClose={handleCardClose}
             onViewDetail={() => { if (selectedPin) setDetailPinId(selectedPin.id); }}
@@ -768,13 +773,18 @@ export function DiscoverScreen() {
                     ? { id: `${pin.id}-1`, title: pin.restaurant.deals[1] }
                     : undefined,
                 ]}
-                socialProof={{
-                  // Same filter-tab override as the floating card.
-                  variant: activeFilters?.tab ?? pin.restaurant.socialProof!.variant,
-                  quote:   pin.restaurant.socialProof!.quote,
-                  names:   pin.restaurant.socialProof!.names,
-                  avatars: pin.restaurant.socialProof!.avatars,
-                }}
+                socialProof={(() => {
+                  const sp        = pin.restaurant.socialProof!;
+                  const isDefault = pin.type !== "friends" && pin.type !== "community";
+                  const countMatch = isDefault ? sp.names.match(/\+(\d+) visited/) : null;
+                  return {
+                    // Same filter-tab override as the floating card.
+                    variant: activeFilters?.tab ?? sp.variant,
+                    quote:   sp.quote,
+                    names:   countMatch ? `${countMatch[1]} visited` : sp.names,
+                    avatars: isDefault ? [] : sp.avatars,
+                  };
+                })()}
                 onViewDetail={() => {
                   // Keep overlay open — detail screen (z-50) covers it.
                   // Closing detail naturally reveals the list again (Fix 2).

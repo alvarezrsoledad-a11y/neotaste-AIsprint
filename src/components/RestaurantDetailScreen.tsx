@@ -835,6 +835,7 @@ function SocialProofBanner({
   if (!sp) return null;
 
   const isFriends = sp.variant === "friends";
+  const isDefault = pin.type !== "friends" && pin.type !== "community";
   // Friends → Mango/50, NeoTasters → Green/50
   const bg        = isFriends ? "#FFF8EB" : "#EEFEF4";
   const firstName = pickFirstName(sp.names);
@@ -867,7 +868,6 @@ function SocialProofBanner({
         gap:            12,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          {/* Name text first */}
           <span style={{
             fontFamily:   "var(--font-poppins)",
             fontSize:     12,
@@ -876,27 +876,33 @@ function SocialProofBanner({
             textOverflow: "ellipsis",
             whiteSpace:   "nowrap",
           }}>
-            <span style={{ fontWeight: 600 }}>{firstName}</span>
-            {sp.names.slice(firstName.length)}
+            {isDefault ? (
+              // Default/Tiny pins: show only count, no name, no avatars
+              <><span style={{ fontWeight: 600 }}>{sp.names.match(/\+(\d+) visited/)?.[1] ?? ""}</span>{" visited"}</>
+            ) : (
+              <><span style={{ fontWeight: 600 }}>{firstName}</span>{sp.names.slice(firstName.length)}</>
+            )}
           </span>
-          {/* Avatars second: 1 for Friends, stacked up to 3 for NeoTasters */}
-          <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
-            {sp.avatars.slice(0, isFriends ? 1 : 3).map((src, i, arr) => (
-              <div
-                key={i}
-                style={{
-                  width:        20,
-                  height:       20,
-                  borderRadius: "50%",
-                  overflow:     "hidden",
-                  border:       "1.5px solid #FEFEFE",
-                  marginRight:  i < arr.length - 1 ? -4 : 0,
-                }}
-              >
-                <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              </div>
-            ))}
-          </div>
+          {/* Avatars: 1 for Friends, stacked up to 3 for NeoTasters; hidden for Default/Tiny */}
+          {!isDefault && (
+            <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+              {sp.avatars.slice(0, isFriends ? 1 : 3).map((src, i, arr) => (
+                <div
+                  key={i}
+                  style={{
+                    width:        20,
+                    height:       20,
+                    borderRadius: "50%",
+                    overflow:     "hidden",
+                    border:       "1.5px solid #FEFEFE",
+                    marginRight:  i < arr.length - 1 ? -4 : 0,
+                  }}
+                >
+                  <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <button
           onClick={onViewReviews}
