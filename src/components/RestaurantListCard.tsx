@@ -38,7 +38,7 @@ export function RestaurantListCard({
   onBookDeal,
 }: RestaurantListCardProps) {
   const isFriends = socialProof.variant === "friends";
-  const snippetBg = isFriends ? "#FEF2F2" : "#EEFEF4";
+  const snippetBg = isFriends ? "#FFF8EB" : "#EEFEF4";
 
   return (
     <div

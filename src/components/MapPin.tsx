@@ -105,23 +105,23 @@ function SvgDefaultActive() {
   );
 }
 
-/** pins-friends-default.svg — salmon pin, no logo (avatar overlaid in code) */
+/** pins-friends-default.svg — mango pin, no logo (avatar overlaid in code) */
 function SvgFriendsDefault() {
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path opacity={0.1} d={D_SHADOW} fill="#1C1D28" />
-      <path fillRule="evenodd" clipRule="evenodd" d={D_BODY} fill="#FA6F6F" />
+      <path fillRule="evenodd" clipRule="evenodd" d={D_BODY} fill="#FFC86A" />
       <path d={D_STROKE} stroke="#1C1D28" strokeOpacity={0.1} />
     </svg>
   );
 }
 
-/** pins-friends-active.svg — deep red pin */
+/** pins-friends-active.svg — deep mango pin */
 function SvgFriendsActive() {
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path opacity={0.1} d={D_SHADOW} fill="#1C1D28" />
-      <path fillRule="evenodd" clipRule="evenodd" d={D_BODY} fill="#BC1919" />
+      <path fillRule="evenodd" clipRule="evenodd" d={D_BODY} fill="#FF9B20" />
       <path d={D_STROKE} stroke="#1C1D28" strokeOpacity={0.1} />
     </svg>
   );
@@ -198,7 +198,7 @@ function ExtraBadge({
         position:       "absolute",
         left:           14,
         top:            14,
-        background:     isFriends ? "#FEE2E2" : "#D8FFE7",
+        background:     isFriends ? "#FFF8EB" : "#D8FFE7",
         border:         "1px solid #FEFEFE",
         borderRadius:   100,
         padding:        2,
@@ -216,7 +216,7 @@ function ExtraBadge({
           fontSize:   10,
           fontWeight: 600,
           lineHeight: "10px",
-          color:      isFriends ? "#F24141" : "#219750",
+          color:      isFriends ? "#FF9B20" : "#219750",
           fontFamily: "var(--font-poppins)",
           whiteSpace: "nowrap",
         }}

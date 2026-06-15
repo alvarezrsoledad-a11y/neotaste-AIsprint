@@ -107,6 +107,9 @@ export function DiscoverScreen() {
   const listOverlayDragStartY = useRef<number | null>(null);
   const listOverlayDragStartT = useRef(0);
 
+  // ── Timer ref — prevents stale close-animation timer from nulling a new selection
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // ── Fix 1: Scroll refs for elevation shadow ───────────────────────────────
   const listScrollRef  = useRef<HTMLDivElement>(null);
   const isHeaderElevated = useScrollElevation(listScrollRef);
@@ -207,6 +210,11 @@ export function DiscoverScreen() {
 
   // ── Pin selection callback (stable ref avoids re-creating MapView) ────────
   const handlePinSelect = useCallback((id: number | null) => {
+    // Cancel any in-flight close animation so a fresh pin tap always wins.
+    if (closeTimerRef.current !== null) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
     setCardClosing(false);
     setSelectedPinId(id);
     if (id !== null) {
@@ -218,9 +226,11 @@ export function DiscoverScreen() {
   // Close card: animate out, then clear selection and restore sheet
   const handleCardClose = useCallback(() => {
     setCardClosing(true);
-    setTimeout(() => {
+    if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
       setSelectedPinId(null);
       setCardClosing(false);
+      closeTimerRef.current = null;
     }, 320);
   }, []);
 
@@ -456,8 +466,8 @@ export function DiscoverScreen() {
 
       {/* ── RESTAURANT CARD (slides up when a pin is selected) ──────────── */}
       <div
-        className="absolute left-4 right-4 z-35"
-        style={{ bottom: TAB_BAR_H + 12, pointerEvents: cardVisible ? "auto" : "none" }}
+        className="absolute left-4 right-4"
+        style={{ bottom: TAB_BAR_H + 12, zIndex: 35, pointerEvents: cardVisible ? "auto" : "none" }}
       >
         {selectedPin && (
           <RestaurantCard
@@ -492,8 +502,8 @@ export function DiscoverScreen() {
               if (!selectedPin) return;
               const idx    = parseInt(dealId.split("-").pop() ?? "0", 10);
               const detail = getRestaurantDetail(selectedPin.id);
-              const deal   = detail?.dealEntries[idx];
-              if (deal && detail) setBookingDeal({
+              const deal   = detail.dealEntries[idx];
+              if (deal) setBookingDeal({
                 deal,
                 restaurantName: selectedPin.restaurant.name,
                 imageSrc:       selectedPin.restaurant.imageSrc,
@@ -773,8 +783,8 @@ export function DiscoverScreen() {
                 onBookDeal={(dealId) => {
                   const idx    = parseInt(dealId.split("-").pop() ?? "0", 10);
                   const detail = getRestaurantDetail(pin.id);
-                  const deal   = detail?.dealEntries[idx];
-                  if (deal && detail) setBookingDeal({
+                  const deal   = detail.dealEntries[idx];
+                  if (deal) setBookingDeal({
                     deal,
                     restaurantName: pin.restaurant.name,
                     imageSrc:       pin.restaurant.imageSrc,

@@ -60,7 +60,7 @@ export function RestaurantCard({
   onViewDetail,
 }: RestaurantCardProps) {
   const isFriends  = socialProof.variant === "friends";
-  const snippetBg  = isFriends ? "#FEF2F2" : "#EEFEF4";
+  const snippetBg  = isFriends ? "#FFF8EB" : "#EEFEF4";
 
   const transform  = isExiting ? "translateY(110%)" : "translateY(0)";
   const transition = isExiting

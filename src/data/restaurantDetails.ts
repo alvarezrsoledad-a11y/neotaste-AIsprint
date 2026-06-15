@@ -1,3 +1,5 @@
+import { MAP_PINS } from "@/data/pins";
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface Review {
   name: string;
@@ -2489,7 +2491,36 @@ export const RESTAURANT_DETAILS: RestaurantDetail[] = [
   },
 ];
 
-// Helper to look up detail by pin ID
-export function getRestaurantDetail(pinId: number): RestaurantDetail | undefined {
-  return RESTAURANT_DETAILS.find((d) => d.pinId === pinId);
+// Helper to look up detail by pin ID.
+// Always returns a RestaurantDetail — synthesises one from MAP_PINS data
+// for any pin that doesn't have a real entry in RESTAURANT_DETAILS.
+export function getRestaurantDetail(pinId: number): RestaurantDetail {
+  const found = RESTAURANT_DETAILS.find((d) => d.pinId === pinId);
+  if (found) return found;
+
+  const pin = MAP_PINS.find((p) => p.id === pinId);
+  const dealTitles: string[] = pin?.restaurant.deals ?? ["Special Deal"];
+
+  return {
+    pinId,
+    priceLevel:    "€€",
+    address:       "Berlin, Germany",
+    neighborhood:  "Berlin",
+    closingTime:   "22:00",
+    about:         pin?.restaurant.name ?? "",
+    galleryImages: pin
+      ? [pin.restaurant.imageSrc, pin.restaurant.imageSrc, pin.restaurant.imageSrc]
+      : [],
+    dealEntries: dealTitles.map((title) => ({
+      title,
+      avgSpend:    "Avg. €20",
+      validity:    "90 days",
+      description: `Enjoy this exclusive deal at ${pin?.restaurant.name ?? "this restaurant"}.`,
+      available:   50,
+    })),
+    reviews:      [],
+    totalReviews: pin
+      ? parseInt(pin.restaurant.reviewCount.replace(/\D/g, ""), 10) || 0
+      : 0,
+  };
 }
