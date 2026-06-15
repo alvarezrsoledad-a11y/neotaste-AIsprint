@@ -312,7 +312,7 @@ export function PeopleFilterSheet({
           </Section>
 
           {/* ── Search area slider ────────────────────────────────────── */}
-          <Section
+          {tab !== "friends" && <Section
             title="Search area"
             right={
               <span style={{
@@ -341,7 +341,7 @@ export function PeopleFilterSheet({
               <span style={{ fontFamily: "var(--font-poppins)", fontSize: 11, color: "#B3B3B3" }}>No limit</span>
               <span style={{ fontFamily: "var(--font-poppins)", fontSize: 11, color: "#B3B3B3" }}>20 km</span>
             </div>
-          </Section>
+          </Section>}
 
           {/* ── Fix 5/6 — Friends or NeoTasters subsection (inline title+chip) ─ */}
           <div>
@@ -364,12 +364,12 @@ export function PeopleFilterSheet({
                 {tab === "friends" ? "Friends" : "NeoTasters"}
               </p>
               {/* Non-functional dropdown chip */}
-              <FilterChip
+              {tab !== "friends" && <FilterChip
                 label="Visited: Last Week"
                 rightIcon="chevron"
                 active={false}
                 onClick={() => { /* non-functional */ }}
-              />
+              />}
             </div>
 
             {/* NeoTasters: search field */}
