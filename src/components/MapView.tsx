@@ -195,12 +195,18 @@ export function MapView({
         const cardTopY           = mapH - CARD_TOP_FROM_BTOM; // px from container top
         const maxAllowedPinY     = cardTopY - CLEARANCE;     // pin must be above this
 
-        const pinPt = map.latLngToContainerPoint([pin.lat, pin.lng] as [number, number]);
+        const mapW   = map.getSize().x;
+        const H_MARGIN = 48; // px from left/right edge before we re-centre horizontally
+        const pinPt  = map.latLngToContainerPoint([pin.lat, pin.lng] as [number, number]);
 
-        // Only pan when pin sits at or below the clearance line
-        if (pinPt.y > maxAllowedPinY) {
-          const deltaY = pinPt.y - maxAllowedPinY; // exact amount to pan down (content moves up)
-          map.panBy([0, deltaY], { animate: true, duration: 0.4, easeLinearity: 0.5 });
+        const deltaY = pinPt.y > maxAllowedPinY ? pinPt.y - maxAllowedPinY : 0;
+        // Centre horizontally only when pin is near/outside an edge.
+        const deltaX = pinPt.x < H_MARGIN        ? pinPt.x - mapW / 2
+                     : pinPt.x > mapW - H_MARGIN  ? pinPt.x - mapW / 2
+                     : 0;
+
+        if (deltaX !== 0 || deltaY !== 0) {
+          map.panBy([deltaX, deltaY], { animate: true, duration: 0.4, easeLinearity: 0.5 });
         }
       }
     }

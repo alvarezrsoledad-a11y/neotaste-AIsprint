@@ -118,6 +118,15 @@ export function DiscoverScreen() {
   const dragStartY    = useRef<number | null>(null);
   const scrollRef     = useRef<HTMLDivElement>(null);
 
+  // ── Card horizontal swipe (pin-to-pin navigation) ──────────────────────────
+  const cardWrapperRef  = useRef<HTMLDivElement>(null);
+  const swipeX0         = useRef<number | null>(null);
+  const swipeY0         = useRef<number | null>(null);
+  const swipeT0         = useRef(0);
+  const swipeIsH        = useRef<boolean | null>(null); // null=undecided, true=H, false=V
+  const swipeLiveX      = useRef(0);
+  const swipeExitTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const onHandlePointerDown = (e: React.PointerEvent) => {
     dragStartY.current = e.clientY;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -214,6 +223,15 @@ export function DiscoverScreen() {
     if (closeTimerRef.current !== null) {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
+    }
+    // Cancel any in-flight swipe-exit animation.
+    if (swipeExitTimer.current !== null) {
+      clearTimeout(swipeExitTimer.current);
+      swipeExitTimer.current = null;
+    }
+    if (cardWrapperRef.current) {
+      cardWrapperRef.current.style.transition = "none";
+      cardWrapperRef.current.style.transform  = "translateX(0)";
     }
     setCardClosing(false);
     setSelectedPinId(id);
@@ -314,6 +332,12 @@ export function DiscoverScreen() {
     return computeFilteredPinIds(activeFilters);
   }, [activeFilters, computeFilteredPinIds]);
 
+  // Ordered list of visible pins — used for card swipe navigation.
+  const visiblePinsOrdered = useMemo(
+    () => MAP_PINS.filter(p => !visiblePinIds || visiblePinIds.has(p.id)),
+    [visiblePinIds]
+  );
+
   // Avatar of first selected person — overrides per-pin avatar on the map.
   const peopleFilterAvatarOverride = useMemo<string | null>(() => {
     if (!activeFilters || activeFilters.selectedPersonIds.length === 0) return null;
@@ -321,6 +345,83 @@ export function DiscoverScreen() {
     const first = people.find(p => p.id === activeFilters.selectedPersonIds[0]);
     return first?.avatarUrl ?? null;
   }, [activeFilters]);
+
+  // ── Card swipe handlers ───────────────────────────────────────────────────
+  const onCardPointerDown = (e: React.PointerEvent) => {
+    if (!selectedPin || swipeExitTimer.current !== null) return;
+    swipeX0.current    = e.clientX;
+    swipeY0.current    = e.clientY;
+    swipeT0.current    = Date.now();
+    swipeIsH.current   = null;
+    swipeLiveX.current = 0;
+  };
+
+  const onCardPointerMove = (e: React.PointerEvent) => {
+    if (swipeX0.current === null) return;
+    const dx = e.clientX - swipeX0.current;
+    const dy = e.clientY - (swipeY0.current ?? 0);
+    if (swipeIsH.current === null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      swipeIsH.current = Math.abs(dx) > Math.abs(dy);
+      if (swipeIsH.current) (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      else return;
+    }
+    if (!swipeIsH.current) return;
+    const idx     = visiblePinsOrdered.findIndex(p => p.id === selectedPinId);
+    const atStart = idx <= 0;
+    const atEnd   = idx >= visiblePinsOrdered.length - 1;
+    const clamped = dx < 0 && atEnd ? dx * 0.2 : dx > 0 && atStart ? dx * 0.2 : dx;
+    swipeLiveX.current = clamped;
+    if (cardWrapperRef.current) {
+      cardWrapperRef.current.style.transition = "none";
+      cardWrapperRef.current.style.transform  = `translateX(${clamped}px)`;
+    }
+  };
+
+  const onCardPointerUp = (e: React.PointerEvent) => {
+    if (swipeX0.current === null) return;
+    const rawDx = e.clientX - swipeX0.current;
+    const dt    = Math.max(Date.now() - swipeT0.current, 1);
+    const vel   = rawDx / dt * 1000; // px/s
+    const dx    = swipeLiveX.current;
+    swipeX0.current  = null;
+    swipeIsH.current = null;
+    if (!selectedPin) return;
+    const idx    = visiblePinsOrdered.findIndex(p => p.id === selectedPinId);
+    const goNext = (dx < -50 || vel < -300) && idx < visiblePinsOrdered.length - 1;
+    const goPrev = (dx > 50  || vel > 300)  && idx > 0;
+    if (goNext || goPrev) {
+      const screenW = typeof window !== "undefined" ? window.innerWidth : 390;
+      const exitX   = goNext ? -screenW * 1.1 : screenW * 1.1;
+      if (cardWrapperRef.current) {
+        cardWrapperRef.current.style.transition = "transform 0.28s cubic-bezier(0.32,0,0.67,0)";
+        cardWrapperRef.current.style.transform  = `translateX(${exitX}px)`;
+      }
+      const nextId = visiblePinsOrdered[goNext ? idx + 1 : idx - 1].id;
+      swipeExitTimer.current = setTimeout(() => {
+        swipeExitTimer.current = null;
+        if (cardWrapperRef.current) {
+          cardWrapperRef.current.style.transition = "none";
+          cardWrapperRef.current.style.transform  = "translateX(0)";
+        }
+        handlePinSelect(nextId);
+      }, 280);
+    } else {
+      if (cardWrapperRef.current) {
+        cardWrapperRef.current.style.transition = "transform 0.28s cubic-bezier(0.34,1.3,0.64,1)";
+        cardWrapperRef.current.style.transform  = "translateX(0)";
+      }
+    }
+  };
+
+  const onCardPointerCancel = () => {
+    swipeX0.current  = null;
+    swipeIsH.current = null;
+    if (cardWrapperRef.current) {
+      cardWrapperRef.current.style.transition = "transform 0.28s cubic-bezier(0.34,1.3,0.64,1)";
+      cardWrapperRef.current.style.transform  = "translateX(0)";
+    }
+  };
 
   return (
     <div
@@ -466,8 +567,13 @@ export function DiscoverScreen() {
 
       {/* ── RESTAURANT CARD (slides up when a pin is selected) ──────────── */}
       <div
+        ref={cardWrapperRef}
         className="absolute left-4 right-4"
-        style={{ bottom: TAB_BAR_H + 12, zIndex: 35, pointerEvents: cardVisible ? "auto" : "none" }}
+        style={{ bottom: TAB_BAR_H + 12, zIndex: 35, pointerEvents: cardVisible ? "auto" : "none", touchAction: "pan-y" }}
+        onPointerDown={onCardPointerDown}
+        onPointerMove={onCardPointerMove}
+        onPointerUp={onCardPointerUp}
+        onPointerCancel={onCardPointerCancel}
       >
         {selectedPin && (
           <RestaurantCard
