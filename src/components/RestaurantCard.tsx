@@ -39,7 +39,7 @@ function splitNames(names: string): { bold: string; rest: string } {
   const andIdx = names.indexOf(" and ");
   if (andIdx >= 0) return { bold: names.slice(0, andIdx), rest: names.slice(andIdx) };
   const visitedIdx = names.lastIndexOf(" visited");
-  if (visitedIdx >= 0) return { bold: names.slice(0, visitedIdx), rest: " visited" };
+  if (visitedIdx >= 0) return { bold: names.slice(0, visitedIdx), rest: " visited this week" };
   return { bold: names, rest: "" };
 }
 

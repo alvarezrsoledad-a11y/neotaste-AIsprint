@@ -881,7 +881,7 @@ function SocialProofBanner({
           }}>
             {isDefault ? (
               // Default/Tiny pins: show only count, no name, no avatars
-              <><span style={{ fontWeight: 600 }}>{sp.names.match(/\+(\d+) visited/)?.[1] ?? ""}</span>{" visited"}</>
+              <><span style={{ fontWeight: 600 }}>{sp.names.match(/\+(\d+) visited/)?.[1] ?? ""}</span>{" visited this week"}</>
             ) : (
               <><span style={{ fontWeight: 600 }}>{firstName}</span>{sp.names.slice(firstName.length)}</>
             )}
