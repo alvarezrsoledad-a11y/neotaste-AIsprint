@@ -463,7 +463,7 @@ export function DiscoverScreen() {
           </div>
           {/* Filter chips — extra vertical padding so drop-shadows are not clipped */}
           <div
-            style={{ display: "flex", alignItems: "center", gap: 4, overflowX: "auto", scrollbarWidth: "none", paddingTop: 6, paddingBottom: 6, marginTop: -6, marginBottom: -6 }}
+            style={{ display: "flex", alignItems: "center", gap: 4, overflowX: "auto", scrollbarWidth: "none", paddingTop: 6, paddingBottom: 6, marginTop: -6, marginBottom: -6, marginRight: -16 }}
           >
             {FILTER_CHIPS.map((chip) => {
               const isPeople = chip.label === "People";
@@ -791,7 +791,7 @@ export function DiscoverScreen() {
           </div>
           {/* Filter chips */}
           <div
-            style={{ display: "flex", alignItems: "center", gap: 4, overflowX: "auto", scrollbarWidth: "none", paddingTop: 6, paddingBottom: 6, marginTop: -6, marginBottom: -6 }}
+            style={{ display: "flex", alignItems: "center", gap: 4, overflowX: "auto", scrollbarWidth: "none", paddingTop: 6, paddingBottom: 6, marginTop: -6, marginBottom: -6, marginRight: -16 }}
           >
             {FILTER_CHIPS.map((chip) => {
               const isPeople = chip.label === "People";
