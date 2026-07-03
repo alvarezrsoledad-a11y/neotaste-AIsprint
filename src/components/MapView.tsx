@@ -25,11 +25,11 @@ function parseExtraFromNames(names?: string): number | undefined {
 }
 
 // ── Pin-type mapping logic (lives here, not inside MapPin) ────────────────────
-// Green pins are default size only when they carry a badge (ranking or new).
-// All other green pins (plain, community, …) render as tiny dots.
+// Green pins are default size only when they carry a visible rank badge (#1–#3).
+// All other green pins (plain, new, community, …) render as tiny dots.
 function resolvePinType(pin: MapPinData): MapPinType {
   if (pin.type === "friends") return "friends";
-  if (pin.type === "ranking" || pin.type === "new") return "default";
+  if (resolveRank(pin) !== undefined) return "default";
   return "tiny";
 }
 
