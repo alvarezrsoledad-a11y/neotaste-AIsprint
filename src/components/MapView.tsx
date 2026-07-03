@@ -25,12 +25,12 @@ function parseExtraFromNames(names?: string): number | undefined {
 }
 
 // ── Pin-type mapping logic (lives here, not inside MapPin) ────────────────────
-// Hierarchy: friends > plain(tiny) > everything else(default)
-// neotaster: reserved for future "NeoTasters" filter — never shown by default
+// Green pins are default size only when they carry a badge (ranking or new).
+// All other green pins (plain, community, …) render as tiny dots.
 function resolvePinType(pin: MapPinData): MapPinType {
-  if (pin.type === "plain")   return "tiny";
   if (pin.type === "friends") return "friends";
-  return "default";
+  if (pin.type === "ranking" || pin.type === "new") return "default";
+  return "tiny";
 }
 
 // Parse "#1" / "#2" / "#3" → 1 / 2 / 3. Anything outside 1–3 → undefined.
