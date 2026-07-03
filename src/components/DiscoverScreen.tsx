@@ -540,30 +540,6 @@ export function DiscoverScreen() {
         </button>
       )}
 
-      {/* ── LIST VIEW BUTTON (hidden when pin selected or sheet expanded) ─ */}
-      {showFloatingButtons && (
-        <div
-          className="absolute left-1/2 -translate-x-1/2 z-20"
-          style={{ bottom: TAB_BAR_H + SHEET_PEEK_H + 16 }}
-        >
-          <button
-            onClick={() => setListOverlayOpen(true)}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl"
-            style={{
-              background: "#11301D",
-              color: "#FEFEFE",
-              fontFamily: "var(--font-poppins)",
-              fontSize: 16,
-              fontWeight: 600,
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/icons/20px/list.svg" width={20} height={20} alt="" style={{ filter: "brightness(0) invert(1)" }} />
-            <span>List view</span>
-          </button>
-        </div>
-      )}
-
 
       {/* ── RESTAURANT CARD (slides up when a pin is selected) ──────────── */}
       <div
